@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const STEPS = ["Upload Resume", "View Skills", "Find Repositories"];
 
@@ -10,6 +10,7 @@ export default function App() {
   const [file, setFile] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [settling, setSettling] = useState(false);
   const [status, setStatus] = useState("");
   const [result, setResult] = useState(null);
 
@@ -32,7 +33,8 @@ export default function App() {
       return;
     }
     setBusy(true);
-    setStatus("Evaluating your resume and finding suitable repos...");
+    setSettling(false);
+    setStatus("");
     setResult(null);
     try {
       const body = new FormData();
@@ -43,6 +45,8 @@ export default function App() {
         setStatus(typeof payload.detail === "string" ? payload.detail : "Match failed.");
         return;
       }
+      setSettling(true);
+      await new Promise((resolve) => setTimeout(resolve, 450));
       setResult(payload);
       setStatus(
         payload.used_fallback
@@ -53,6 +57,7 @@ export default function App() {
       setStatus("The request did not finish. Check that the API is running.");
     } finally {
       setBusy(false);
+      setSettling(false);
     }
   }
 
@@ -106,6 +111,7 @@ export default function App() {
         <button type="submit" disabled={busy}>
           {busy ? "Matching…" : "Get Started"}
         </button>
+        {busy ? <MatchProgress complete={settling} /> : null}
         <p className="status" role="status">
           {status}
         </p>
@@ -113,6 +119,80 @@ export default function App() {
 
       {result ? <Results payload={result} /> : null}
     </main>
+  );
+}
+
+const MATCH_STAGES = [
+  { label: "Reading your resume", at: 0 },
+  { label: "Extracting your skills", at: 4 },
+  { label: "Searching the catalog", at: 16 },
+  { label: "Ranking matches", at: 24 },
+  { label: "Finding starter issues", at: 40 },
+];
+
+function easedProgress(seconds) {
+  return 90 * (1 - Math.exp(-seconds / 28));
+}
+
+function stageIndexFor(seconds) {
+  let index = 0;
+  for (let i = 0; i < MATCH_STAGES.length; i += 1) {
+    if (seconds >= MATCH_STAGES[i].at) index = i;
+  }
+  return index;
+}
+
+function MatchProgress({ complete }) {
+  const [ms, setMs] = useState(0);
+
+  useEffect(() => {
+    if (complete) return undefined;
+    const started = performance.now();
+    const id = setInterval(() => setMs(performance.now() - started), 200);
+    return () => clearInterval(id);
+  }, [complete]);
+
+  const seconds = ms / 1000;
+  const elapsed = Math.floor(seconds);
+  const stageIndex = complete ? MATCH_STAGES.length - 1 : stageIndexFor(seconds);
+  const progress = complete ? 100 : easedProgress(seconds);
+  const note =
+    elapsed >= 45
+      ? "Gemini may be retrying with a backup model. This can take up to a minute."
+      : elapsed >= 20
+        ? "Gemini is busy, still working, this can take up to a minute"
+        : "";
+
+  return (
+    <div className="match-progress">
+      <div
+        className="progress"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progress)}
+        aria-valuetext={`${MATCH_STAGES[stageIndex].label}, ${elapsed} seconds`}
+      >
+        <span style={{ width: `${progress}%` }} />
+      </div>
+      <p className="elapsed">{elapsed}s</p>
+      <p className="sr-only" aria-live="polite">
+        {complete ? "Match finished." : MATCH_STAGES[stageIndex].label}
+        {note ? ` ${note}` : ""}
+      </p>
+      <ol className="match-stages">
+        {MATCH_STAGES.map((stage, index) => {
+          const state = complete || index < stageIndex ? "done" : index === stageIndex ? "current" : "";
+          return (
+            <li key={stage.label} className={state}>
+              <span aria-hidden="true" />
+              {stage.label}
+            </li>
+          );
+        })}
+      </ol>
+      {note ? <p className="match-note">{note}</p> : null}
+    </div>
   );
 }
 

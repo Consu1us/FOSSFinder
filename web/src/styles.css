@@ -128,6 +128,77 @@ button:disabled { opacity: 0.6; cursor: wait; }
 
 .status { min-height: 1.2em; margin: 0; color: var(--warn); }
 
+.match-progress { display: grid; gap: 10px; }
+
+.progress {
+  height: 8px;
+  background: #e7f5ee;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+  transition: width 0.35s ease;
+}
+
+.elapsed {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.match-stages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.match-stages li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.match-stages li > span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  flex: none;
+}
+
+.match-stages .current { color: var(--ink); font-weight: 500; }
+.match-stages .current > span { background: var(--accent); border-color: var(--accent); }
+.match-stages .done { color: var(--accent-ink); }
+.match-stages .done > span { background: var(--accent); border-color: var(--accent); }
+
+.match-note { margin: 0; color: var(--muted); font-size: 14px; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress > span { transition: none; }
+}
+
 .privacy, .model-used {
   margin: 0;
   color: var(--muted);
