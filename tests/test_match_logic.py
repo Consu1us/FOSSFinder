@@ -8,7 +8,7 @@ from app.matching import fallback_rank_repos, profile_terms, shortlist_repos
 class CatalogTests(unittest.TestCase):
     def test_catalog_entries_are_complete(self):
         repos = load_catalog()
-        self.assertEqual(len(repos), 103)
+        self.assertEqual(len(repos), 128)
         names = [repo["full_name"] for repo in repos]
         self.assertEqual(len(names), len(set(names)))
         for repo in repos:
