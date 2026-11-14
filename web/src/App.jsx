@@ -104,7 +104,7 @@ export default function App() {
         </label>
         <p className="privacy">Resumes and personal information are never stored, and promptly deleted.</p>
         <button type="submit" disabled={busy}>
-          {busy ? "Matching…" : "Find repositories"}
+          {busy ? "Matching…" : "Get Started"}
         </button>
         <p className="status" role="status">
           {status}
