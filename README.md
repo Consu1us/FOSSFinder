@@ -98,4 +98,4 @@ The script installs the virtualenv, builds the React app, writes the nginx site,
 
 ## FOR?
 
-for umass hackathon @consu1us @kwakux1
+for hackathon @consu1us @kwakux1
