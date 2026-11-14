@@ -13,6 +13,7 @@ ENV_EMPTY = {
     "GEMINI_API_KEY": "",
     "GEMINI_MODEL": "",
     "GEMINI_FALLBACK_MODEL": "",
+    "GEMINI_TIMEOUT_SECONDS": "",
     "GITHUB_TOKEN": "",
 }
 ENV_READY = {
@@ -21,6 +22,7 @@ ENV_READY = {
     "GEMINI_API_KEY": "test-key",
     "GEMINI_MODEL": "",
     "GEMINI_FALLBACK_MODEL": "",
+    "GEMINI_TIMEOUT_SECONDS": "",
     "GITHUB_TOKEN": "",
 }
 
@@ -95,6 +97,7 @@ class StartupTests(unittest.TestCase):
         self.assertIn("GEMINI_API_KEY", body["missing"])
         self.assertEqual(body["model"], "gemini-3.5-flash")
         self.assertEqual(body["fallback_model"], "")
+        self.assertEqual(body["gemini_timeout_seconds"], 30)
 
     def test_catalog_is_seeded_once_at_startup(self):
         store = _CountingStore()

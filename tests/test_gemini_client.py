@@ -10,13 +10,15 @@ from google.genai.errors import ClientError, ServerError
 
 from app.gemini_client import (
     BUSY_MESSAGE,
+    DEFAULT_TIMEOUT_MS,
     MAX_ATTEMPTS,
+    MIN_TIMEOUT_MS,
     REJECTED_MESSAGE,
-    REQUEST_TIMEOUT_MS,
     GeminiMatcher,
     GeminiProfileError,
     _backoff_seconds,
     is_retryable,
+    normalize_timeout_seconds,
 )
 from app.main import app
 from tests.test_startup import ENV_READY
@@ -60,19 +62,24 @@ class ScriptedClient:
         self.models = ScriptedModels(script)
 
 
-def _matcher(script, fallback="", rng=None):
+def _matcher(script, fallback="", rng=None, timeout_seconds=None):
     delays = []
     client = ScriptedClient(script)
     matcher = GeminiMatcher(
         "test-key",
         "gemini-3.8-flash",
         fallback,
+        timeout_seconds=timeout_seconds,
         client=client,
         sleep=delays.append,
         clock=lambda: 0.0,
         rng=rng or random.Random(0),
     )
     return matcher, client, delays
+
+
+def _deadlines(client) -> list[int]:
+    return [call["config"].http_options.timeout for call in client.models.calls]
 
 
 class RetryClassificationTests(unittest.TestCase):
@@ -119,8 +126,8 @@ class ProfileRetryTests(unittest.TestCase):
             ["gemini-3.8-flash", "gemini-3.8-flash"],
         )
         self.assertEqual(len(delays), 1)
-        self.assertEqual(client.models.calls[0]["config"].http_options.timeout, REQUEST_TIMEOUT_MS)
-        self.assertGreaterEqual(client.models.calls[0]["config"].http_options.timeout, 10_000)
+        self.assertEqual(_deadlines(client), [DEFAULT_TIMEOUT_MS, DEFAULT_TIMEOUT_MS])
+        self.assertTrue(all(deadline >= MIN_TIMEOUT_MS for deadline in _deadlines(client)))
         self.assertEqual(client.models.calls[0]["config"].http_options.retry_options.attempts, 1)
 
     def test_timeout_then_success(self):
@@ -206,14 +213,51 @@ class RankRetryTests(unittest.TestCase):
         self.assertEqual(client.models.calls[-1]["model"], "gemini-2.5-flash")
 
 
-class ClientSetupTests(unittest.TestCase):
-    def test_real_client_gets_a_per_request_timeout(self):
+class TimeoutTests(unittest.TestCase):
+    def test_blank_and_short_values_clamp_to_the_gemini_minimum(self):
+        self.assertEqual(normalize_timeout_seconds(""), 30)
+        self.assertEqual(normalize_timeout_seconds(None), 30)
+        self.assertEqual(normalize_timeout_seconds("nope"), 30)
+        self.assertEqual(normalize_timeout_seconds(8), 10)
+        self.assertEqual(normalize_timeout_seconds("4"), 10)
+        self.assertEqual(normalize_timeout_seconds(10), 10)
+        self.assertEqual(normalize_timeout_seconds("12.5"), 12.5)
+
+    def test_deadline_sent_to_the_client_is_at_least_10_seconds(self):
+        expected = {
+            None: DEFAULT_TIMEOUT_MS,
+            0: MIN_TIMEOUT_MS,
+            8: MIN_TIMEOUT_MS,
+            "4": MIN_TIMEOUT_MS,
+            10: MIN_TIMEOUT_MS,
+            30: DEFAULT_TIMEOUT_MS,
+            "12.5": 12_500,
+        }
+        for configured, deadline_ms in expected.items():
+            matcher, client, _delays = _matcher(
+                [_response(_profile_payload())], timeout_seconds=configured
+            )
+            matcher.profile_from_resume("resume text")
+            deadline = client.models.calls[0]["config"].http_options.timeout
+            self.assertGreaterEqual(deadline, MIN_TIMEOUT_MS)
+            self.assertEqual(deadline, deadline_ms)
+        short, short_client, _delays = _matcher(
+            [_response(_profile_payload())], timeout_seconds=8
+        )
+        short.profile_from_resume("resume text")
+        self.assertEqual(short_client.models.calls[0]["config"].http_options.timeout, MIN_TIMEOUT_MS)
+
+    def test_real_client_deadline_is_at_least_10_seconds(self):
         with patch("app.gemini_client.genai.Client") as ctor:
+            GeminiMatcher("key", "gemini-3.8-flash", timeout_seconds=8)
+            short_options = ctor.call_args.kwargs["http_options"]
             GeminiMatcher("key", "gemini-3.8-flash", "gemini-2.5-flash")
-        options = ctor.call_args.kwargs["http_options"]
-        self.assertEqual(ctor.call_args.kwargs["api_key"], "key")
-        self.assertEqual(options.timeout, REQUEST_TIMEOUT_MS)
-        self.assertEqual(options.retry_options.attempts, 1)
+            default_options = ctor.call_args.kwargs["http_options"]
+        self.assertGreaterEqual(short_options.timeout, MIN_TIMEOUT_MS)
+        self.assertEqual(short_options.timeout, MIN_TIMEOUT_MS)
+        self.assertGreaterEqual(default_options.timeout, MIN_TIMEOUT_MS)
+        self.assertEqual(default_options.timeout, DEFAULT_TIMEOUT_MS)
+        self.assertEqual(default_options.retry_options.attempts, 1)
 
 
 class _QuietStore:

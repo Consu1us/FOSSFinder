@@ -169,6 +169,7 @@ def health():
         "catalog_repos": catalog,
         "model": settings.gemini_model,
         "fallback_model": settings.gemini_fallback_model,
+        "gemini_timeout_seconds": settings.gemini_timeout_seconds,
         "github_token": bool(settings.github_token),
         "public_url": settings.public_url,
     }
@@ -221,6 +222,7 @@ def match_resume(resume: UploadFile = File(...)):
         settings.gemini_api_key,
         settings.gemini_model,
         settings.gemini_fallback_model,
+        timeout_seconds=settings.gemini_timeout_seconds,
     )
     try:
         profile = gemini.profile_from_resume(resume_text)

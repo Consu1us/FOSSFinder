@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import random
 import time
 
@@ -9,15 +10,16 @@ from google.genai import types
 
 logger = logging.getLogger("fossfinder.gemini")
 
-# Gemini rejects a deadline under 10 seconds. The SDK timeout is milliseconds.
+# Gemini rejects a manually set deadline under 10 seconds.
+MIN_TIMEOUT_S = 10.0
 MIN_TIMEOUT_MS = 10_000
-REQUEST_TIMEOUT_MS = 60_000
-# Stop before starting an attempt that would be rejected for a short deadline.
-MIN_ATTEMPT_S = MIN_TIMEOUT_MS / 1000
-MAX_ATTEMPTS = 3
-# One full attempt fits in each budget. Faster failures can still retry.
-PRIMARY_BUDGET_S = 60.0
-FALLBACK_BUDGET_S = 60.0
+# Structured profile calls often take 10-20s, so the default leaves headroom.
+DEFAULT_TIMEOUT_S = 30.0
+DEFAULT_TIMEOUT_MS = 30_000
+# One retry on a model. A fast 503 still gets another try; a hung call does not stack.
+MAX_ATTEMPTS = 2
+# Primary attempt plus backup model, including one retry when the failure is fast.
+OVERALL_BUDGET_S = 60.0
 RETRY_BASE_S = 0.4
 RETRY_CAP_S = 3.0
 RETRY_JITTER_S = 0.25
@@ -109,6 +111,26 @@ def _status_code(exc: BaseException) -> int | None:
         return None
 
 
+def normalize_timeout_seconds(value) -> float:
+    """Return a Gemini deadline in seconds. Blank or invalid values use 30s; shorter values become 10s."""
+    if value is None:
+        return DEFAULT_TIMEOUT_S
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return DEFAULT_TIMEOUT_S
+        value = text
+    try:
+        seconds = float(value)
+    except (TypeError, ValueError):
+        return DEFAULT_TIMEOUT_S
+    if not math.isfinite(seconds):
+        return DEFAULT_TIMEOUT_S
+    if seconds < MIN_TIMEOUT_S:
+        return MIN_TIMEOUT_S
+    return seconds
+
+
 def _backoff_seconds(failed_attempts: int, rng: random.Random) -> float:
     growth = min(RETRY_CAP_S, RETRY_BASE_S * (2**failed_attempts))
     return growth + rng.uniform(0, RETRY_JITTER_S)
@@ -129,6 +151,7 @@ class GeminiMatcher:
         model: str,
         fallback_model: str = "",
         *,
+        timeout_seconds: float | str | None = None,
         client=None,
         sleep=None,
         clock=None,
@@ -137,9 +160,10 @@ class GeminiMatcher:
         self._model = (model or "").strip()
         fallback = (fallback_model or "").strip()
         self._fallback_model = "" if not fallback or fallback == self._model else fallback
+        self._timeout_s = normalize_timeout_seconds(timeout_seconds)
         self._client = client or genai.Client(
             api_key=api_key,
-            http_options=_http_options(REQUEST_TIMEOUT_MS),
+            http_options=_http_options(self._client_timeout_ms()),
         )
         self._sleep = sleep or time.sleep
         self._clock = clock or time.monotonic
@@ -225,9 +249,24 @@ class GeminiMatcher:
         cleaned.sort(key=lambda item: item["score"], reverse=True)
         return cleaned[:5]
 
+    def _client_timeout_ms(self) -> int:
+        # The client default matches the first request: at least 10s, and inside this call's budget.
+        return min(int(self._timeout_s * 1000), int(self._primary_budget() * 1000))
+
+    def _primary_budget(self) -> float:
+        if self._fallback_model:
+            # Leave a legal 10s deadline for the backup model inside the 60s cap.
+            return min(self._timeout_s, OVERALL_BUDGET_S - MIN_TIMEOUT_S)
+        return min(self._timeout_s * MAX_ATTEMPTS, OVERALL_BUDGET_S)
+
+    def _fallback_budget(self) -> float:
+        if not self._fallback_model:
+            return 0.0
+        return min(self._timeout_s, OVERALL_BUDGET_S - self._primary_budget())
+
     def _generate(self, contents: str, schema: dict):
         try:
-            return self._call_model(self._model, contents, schema, PRIMARY_BUDGET_S)
+            return self._call_model(self._model, contents, schema, self._primary_budget())
         except Exception as exc:
             if not is_retryable(exc) or not self._fallback_model:
                 raise
@@ -237,18 +276,18 @@ class GeminiMatcher:
                 self._fallback_model,
             )
             return self._call_model(
-                self._fallback_model, contents, schema, FALLBACK_BUDGET_S
+                self._fallback_model, contents, schema, self._fallback_budget()
             )
 
     def _call_model(self, model: str, contents: str, schema: dict, budget_s: float):
         deadline = self._clock() + budget_s
         last_error: BaseException | None = None
         for attempt in range(MAX_ATTEMPTS):
-            remaining = deadline - self._clock()
-            remaining_ms = int(remaining * 1000)
+            remaining_ms = int((deadline - self._clock()) * 1000)
+            # Never send Gemini a deadline under 10 seconds; skip the attempt instead.
             if remaining_ms < MIN_TIMEOUT_MS:
                 break
-            timeout_ms = min(REQUEST_TIMEOUT_MS, remaining_ms)
+            timeout_ms = min(int(self._timeout_s * 1000), remaining_ms)
             try:
                 return self._client.models.generate_content(
                     model=model,
@@ -274,7 +313,8 @@ class GeminiMatcher:
                 if attempt == MAX_ATTEMPTS - 1:
                     break
                 delay = _backoff_seconds(attempt, self._rng)
-                if deadline - self._clock() - delay < MIN_ATTEMPT_S:
+                remaining_after_sleep_ms = int((deadline - self._clock() - delay) * 1000)
+                if remaining_after_sleep_ms < MIN_TIMEOUT_MS:
                     break
                 self._sleep(delay)
         if last_error is None:
