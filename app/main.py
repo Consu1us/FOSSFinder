@@ -171,6 +171,35 @@ def index():
     return PlainTextResponse(UI_HINT)
 
 
+_DIST_FILES = {
+    "favicon.svg": "image/svg+xml",
+    "favicon.ico": "image/x-icon",
+    "apple-touch-icon.png": "image/png",
+}
+
+
+def _dist_file(name: str):
+    path = DIST / name
+    if path.is_file():
+        return FileResponse(path, media_type=_DIST_FILES[name])
+    raise HTTPException(status_code=404, detail="Not found.")
+
+
+@app.get("/favicon.svg")
+def favicon_svg():
+    return _dist_file("favicon.svg")
+
+
+@app.get("/favicon.ico")
+def favicon_ico():
+    return _dist_file("favicon.ico")
+
+
+@app.get("/apple-touch-icon.png")
+def apple_touch_icon():
+    return _dist_file("apple-touch-icon.png")
+
+
 @app.get("/api/health")
 def health():
     settings = get_settings()

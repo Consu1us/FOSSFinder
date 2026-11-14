@@ -19,28 +19,40 @@ body {
     radial-gradient(900px 420px at 100% -10%, #d7efe4 0%, transparent 55%),
     var(--paper);
   font-family: Outfit, sans-serif;
+  font-weight: 400;
 }
 
 main { max-width: 980px; margin: 0 auto; padding: 48px 20px 80px; }
 
 .hero { margin: 0 0 18px; }
 
+h1, h2, h3, .subtitle, .score strong {
+  font-family: "Space Grotesk", Outfit, sans-serif;
+}
+
 h1 {
-  font-family: Fraunces, serif;
-  font-weight: 680;
-  font-size: clamp(56px, 10vw, 104px);
-  line-height: 0.9;
-  letter-spacing: -0.04em;
+  display: flex;
+  align-items: center;
+  gap: 0.14em;
+  font-weight: 600;
+  font-size: clamp(36px, 7.2vw, 84px);
+  line-height: 1;
+  letter-spacing: -0.02em;
   margin: 0;
+}
+
+.logo {
+  width: 0.82em;
+  height: 0.82em;
+  flex: none;
 }
 
 .subtitle {
   margin: 12px 0 0;
-  font-family: Fraunces, serif;
-  font-weight: 560;
+  font-weight: 500;
   font-size: clamp(26px, 3.2vw, 40px);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
   color: var(--accent-ink);
 }
 
@@ -49,7 +61,7 @@ h1 {
   max-width: 40ch;
   font-size: clamp(18px, 2.1vw, 22px);
   line-height: 1.35;
-  font-weight: 520;
+  font-weight: 500;
 }
 
 .lede { max-width: 66ch; color: var(--muted); font-size: 18px; margin: 0 0 22px; }
@@ -108,7 +120,7 @@ button {
   background: var(--accent);
   color: white;
   font: inherit;
-  font-weight: 640;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -132,8 +144,8 @@ button:disabled { opacity: 0.6; cursor: wait; }
 
 .group { margin-top: 14px; }
 
-h2 { margin: 0 0 8px; font-size: 22px; }
-h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 520; }
+h2 { margin: 0 0 8px; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; }
+h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 500; letter-spacing: 0; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
@@ -155,8 +167,9 @@ article + article { border-top: 1px solid var(--line); margin-top: 16px; padding
 
 .score strong {
   display: block;
-  font-family: Fraunces, serif;
   font-size: 36px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   line-height: 1;
 }
 
