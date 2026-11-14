@@ -59,7 +59,10 @@ export default function App() {
   return (
     <main>
       <header className="hero">
-        <h1>FOSSFinder</h1>
+        <h1>
+          <img className="logo" src="/favicon.svg" alt="" width="32" height="32" />
+          FOSSFinder
+        </h1>
         <p className="subtitle">Find FOSS Fast</p>
         <p className="support">Projects you can actually contribute to.</p>
       </header>
