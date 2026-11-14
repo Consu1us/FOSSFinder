@@ -88,3 +88,8 @@ Set `CERTBOT_EMAIL` when you run the script if the DNS change has already propag
 - `POST /api/match` with a multipart field named `resume` (PDF). The resume and the extracted profile are kept for that response only. MongoDB stores the time and the recommended repository names, not the resume. `model_used` names the Gemini model that read the profile and, when it differs, the model that ranked repositories. `issues_note` is set when starter issues could not be loaded, including a rate limit with no `GITHUB_TOKEN`.
 - `GET /api/repos` lists the reviewed repositories in Atlas.
 - `GET /api/health` reports missing settings, whether Atlas answered a ping, whether the startup catalog seed succeeded, how many catalog rows that seed wrote, the Gemini model, fallback model, and per-request timeout, and whether `GITHUB_TOKEN` is set.
+
+
+## FOR?
+
+for umass hackathon @consu1us @kwakux1 
