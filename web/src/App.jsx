@@ -58,8 +58,11 @@ export default function App() {
 
   return (
     <main>
-      <p className="kicker">Find FOSS fast</p>
-      <h1>Projects you can actually contribute to.</h1>
+      <header className="hero">
+        <h1>FOSSFinder</h1>
+        <p className="subtitle">Find FOSS Fast</p>
+        <p className="support">Projects you can actually contribute to.</p>
+      </header>
       <p className="lede">
         Upload your resume (PDF). We'll read the skills you've listed and the ones your
         experience shows, then match them to a set of open-source
