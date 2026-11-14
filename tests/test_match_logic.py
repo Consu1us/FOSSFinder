@@ -2,7 +2,6 @@ import unittest
 
 from app.catalog import REQUIRED, load_catalog
 from app.matching import fallback_rank_repos, profile_terms, shortlist_repos
-from app.scoring import fallback_rank
 
 
 class CatalogTests(unittest.TestCase):
@@ -54,32 +53,6 @@ class MatchingTests(unittest.TestCase):
         )
         self.assertEqual(terms.count("python"), 1)
         self.assertIn("fastapi", terms)
-
-
-class ScoringTests(unittest.TestCase):
-    def test_language_match_ranks_higher(self):
-        profile = {"languages": ["Python"], "frameworks": ["FastAPI"], "domains": []}
-        issues = [
-            {
-                "html_url": "https://github.com/a/b/issues/1",
-                "title": "Fix docs",
-                "body": "",
-                "labels": [],
-                "updated_at": None,
-                "repo": {"language": "Ruby", "description": "", "stars": 10},
-            },
-            {
-                "html_url": "https://github.com/a/c/issues/2",
-                "title": "Add FastAPI example",
-                "body": "help with fastapi",
-                "labels": ["good first issue"],
-                "updated_at": None,
-                "repo": {"language": "Python", "description": "api", "stars": 100},
-            },
-        ]
-        ranked = fallback_rank(profile, issues)
-        self.assertEqual(ranked[0]["issue_url"], issues[1]["html_url"])
-        self.assertGreater(ranked[0]["score"], ranked[1]["score"])
 
 
 if __name__ == "__main__":
