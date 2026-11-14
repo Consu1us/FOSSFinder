@@ -23,7 +23,7 @@ cp .env.example .env
 
 `MONGODB_URI` is the Atlas connection string. `MONGODB_DB` defaults to `fossfinder`. Reviewed repositories live in the `repos` collection. Starter-issue responses are cached in `starter_issue_cache` for about an hour, so a repeated match for the same repository and seniority does not call GitHub again. `GEMINI_API_KEY` is required. `GEMINI_MODEL` is optional and defaults to `gemini-3.5-flash`. `GEMINI_FALLBACK_MODEL` is optional. When the primary model is busy (HTTP 503 or UNAVAILABLE, 429 or RESOURCE_EXHAUSTED, 500, or a timeout), that call is retried once with a short backoff and then sent to the backup model. `GEMINI_TIMEOUT_SECONDS` is the per-request deadline (default 30 seconds). Gemini rejects anything under 10 seconds, so lower values are raised to 10. A profile call often takes 10-20 seconds. The whole Gemini call, retry included, still stops after about 60 seconds. If the resume still cannot be read, the response asks you to wait and try again. If ranking still fails, repositories are ranked from skill overlap. `GITHUB_TOKEN` is optional; set it before demoing several matches.
 
-The reviewed list is `data/catalog.json`. When `MONGODB_URI` is set, startup loads that file into Atlas with one bulk write. If Atlas is unreachable, the error is logged, the API stays up, and `GET /api/health` reports the failure. Match and repo requests read the catalog already stored in Atlas. If that seed failed and Atlas has no reviewed repositories, those routes return 503. After Atlas is reachable again, restart the API so the catalog seed runs
+The reviewed list is `data/catalog.json`. When `MONGODB_URI` is set, startup loads that file into Atlas with one bulk write. If Atlas is unreachable, the error is logged, the API stays up, and `GET /api/health` reports the failure. Match and repo requests read the catalog already stored in Atlas. If that seed failed and Atlas has no reviewed repositories, those routes return 503. After Atlas is reachable again, restart the API so the catalog seed runs.
 
 ## Run
 
@@ -69,19 +69,26 @@ Open http://127.0.0.1:5173. The Vite dev server proxies `/api` to the Python API
 
 ## Vultr and Porkbun
 
-`fossfinder.work` currently resolves to Porkbun parking addresses `192.0.79.146` and `192.0.79.180`. The app is ready to be served from a Vultr Ubuntu server at `https://fossfinder.work`.
+https://fossfinder.work is the live site. Porkbun DNS for `fossfinder.work` and `www.fossfinder.work` points at the Vultr server `45.76.63.79`. The checkout is `/var/www/fossfinder` on `main`. Nginx proxies both names to the API on `127.0.0.1:8000`, and the systemd service is `fossfinder`.
 
-1. Create an Ubuntu 24.04 Vultr VPS and copy its public IPv4 address.
-2. In Porkbun, open `fossfinder.work`, then DNS. Delete the parking A records for the apex and for `www`. Add one A record for the apex and one A record for `www`, both pointing at the Vultr IPv4 address. Leave the nameservers on Porkbun.
-3. In MongoDB Atlas, allow that same IPv4 address under Network Access.
-4. On the server, clone the `vultr` branch, copy `.env` into that directory, and set `PUBLIC_URL=https://fossfinder.work`.
-5. From the repository directory, install the proxy and the service:
+Publish a `main` commit from that server as root:
+
+```bash
+cd /var/www/fossfinder
+git -c safe.directory=/var/www/fossfinder pull origin main
+cd web && npm ci && npm run build
+systemctl restart fossfinder
+```
+
+`safe.directory` is required because root does not own the checkout. Pull before the build. `npm run build` writes `web/dist`, which is the page the API serves. A build that follows a failed pull republishes the previous page.
+
+A new Ubuntu server uses the same layout. Clone `main` into the directory you want, copy `.env` there, set `PUBLIC_URL=https://fossfinder.work`, and allow that server's IPv4 under Atlas Network Access. In Porkbun, point the apex and `www` A records at the server and leave the nameservers on Porkbun. From the repository directory:
 
 ```bash
 sudo bash deploy/vultr.sh
 ```
 
-Set `CERTBOT_EMAIL` when you run the script if the DNS change has already propagated. Certbot then requests a certificate for `fossfinder.work` and `www.fossfinder.work` and turns on HTTPS. Nginx proxies both names to the API on `127.0.0.1:8000`.
+The script installs the virtualenv, builds the React app, writes the nginx site, and installs a systemd unit whose paths match that directory. Set `CERTBOT_EMAIL` when DNS already points at the server. Certbot then requests a certificate for `fossfinder.work` and `www.fossfinder.work`.
 
 ## API
 
@@ -89,7 +96,6 @@ Set `CERTBOT_EMAIL` when you run the script if the DNS change has already propag
 - `GET /api/repos` lists the reviewed repositories in Atlas.
 - `GET /api/health` reports missing settings, whether Atlas answered a ping, whether the startup catalog seed succeeded, how many catalog rows that seed wrote, the Gemini model, fallback model, and per-request timeout, and whether `GITHUB_TOKEN` is set.
 
-
 ## FOR?
 
-for umass hackathon @consu1us @kwakux1 
+for umass hackathon @consu1us @kwakux1

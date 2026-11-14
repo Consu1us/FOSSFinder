@@ -174,6 +174,8 @@ def index():
 _DIST_FILES = {
     "favicon.svg": "image/svg+xml",
     "favicon.ico": "image/x-icon",
+    "favicon-32.png": "image/png",
+    "favicon-16.png": "image/png",
     "apple-touch-icon.png": "image/png",
 }
 
@@ -193,6 +195,16 @@ def favicon_svg():
 @app.get("/favicon.ico")
 def favicon_ico():
     return _dist_file("favicon.ico")
+
+
+@app.get("/favicon-32.png")
+def favicon_png():
+    return _dist_file("favicon-32.png")
+
+
+@app.get("/favicon-16.png")
+def favicon_png_small():
+    return _dist_file("favicon-16.png")
 
 
 @app.get("/apple-touch-icon.png")
