@@ -1,0 +1,762 @@
+[
+  {
+    "full_name": "zulip/zulip",
+    "html_url": "https://github.com/zulip/zulip",
+    "description": "Organized team chat. The server is Python and Django, with a JavaScript web app.",
+    "languages": ["Python", "JavaScript"],
+    "skills": ["python", "django", "javascript", "html", "css", "postgresql", "web"],
+    "domains": ["chat", "web"],
+    "difficulty": "beginner",
+    "contribution_notes": "Zulip keeps a large set of issues marked for new contributors and documents how to run the development server. Docs, UI copy, and small Django fixes are realistic first changes."
+  },
+  {
+    "full_name": "pallets/flask",
+    "html_url": "https://github.com/pallets/flask",
+    "description": "A small Python web framework for HTTP applications.",
+    "languages": ["Python"],
+    "skills": ["python", "web", "http", "wsgi"],
+    "domains": ["web"],
+    "difficulty": "beginner",
+    "contribution_notes": "Docs, examples, and focused bug fixes are the usual way in. The codebase stays small enough to read in an afternoon."
+  },
+  {
+    "full_name": "django/django",
+    "html_url": "https://github.com/django/django",
+    "description": "A Python web framework for database-backed sites, with its own ORM, admin, and auth.",
+    "languages": ["Python"],
+    "skills": ["python", "django", "orm", "sql", "html", "web"],
+    "domains": ["web"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Django tags easy tickets. Documentation and tests are accepted paths before changing the ORM or request stack."
+  },
+  {
+    "full_name": "fastapi/fastapi",
+    "html_url": "https://github.com/fastapi/fastapi",
+    "description": "A Python framework for building HTTP APIs with type hints.",
+    "languages": ["Python"],
+    "skills": ["python", "fastapi", "pydantic", "api", "openapi", "async"],
+    "domains": ["api", "web"],
+    "difficulty": "beginner",
+    "contribution_notes": "Many open issues are docs, examples, and small API clarifications. A person who has shipped a FastAPI service can start there."
+  },
+  {
+    "full_name": "psf/requests",
+    "html_url": "https://github.com/psf/requests",
+    "description": "A Python HTTP client with a small, widely used API.",
+    "languages": ["Python"],
+    "skills": ["python", "http", "networking"],
+    "domains": ["networking"],
+    "difficulty": "beginner",
+    "contribution_notes": "Fixes tend to be narrow: docs, tests, and edge cases in how requests are prepared and sent."
+  },
+  {
+    "full_name": "pytest-dev/pytest",
+    "html_url": "https://github.com/pytest-dev/pytest",
+    "description": "The Python test runner most projects use for unit and integration tests.",
+    "languages": ["Python"],
+    "skills": ["python", "pytest", "testing"],
+    "domains": ["testing"],
+    "difficulty": "intermediate",
+    "contribution_notes": "People who write tests for a living can help with plugin docs, assertion messages, and small runner bugs."
+  },
+  {
+    "full_name": "pandas-dev/pandas",
+    "html_url": "https://github.com/pandas-dev/pandas",
+    "description": "Python data structures and tools for tables, time series, and file formats.",
+    "languages": ["Python"],
+    "skills": ["python", "pandas", "data", "numpy", "sql"],
+    "domains": ["data"],
+    "difficulty": "intermediate",
+    "contribution_notes": "New contributors usually start with documentation, tests, or a single method in the DataFrame API."
+  },
+  {
+    "full_name": "numpy/numpy",
+    "html_url": "https://github.com/numpy/numpy",
+    "description": "Array computing for Python, used underneath most scientific libraries.",
+    "languages": ["Python", "C"],
+    "skills": ["python", "c", "numpy", "numerical"],
+    "domains": ["data", "scientific"],
+    "difficulty": "advanced",
+    "contribution_notes": "Docs and Python-side tests are approachable. Changes in the C core suit someone who already works with numerical code."
+  },
+  {
+    "full_name": "scikit-learn/scikit-learn",
+    "html_url": "https://github.com/scikit-learn/scikit-learn",
+    "description": "Classical machine learning in Python: models, metrics, and preprocessing.",
+    "languages": ["Python"],
+    "skills": ["python", "machine learning", "scikit-learn", "numpy", "pandas"],
+    "domains": ["machine learning"],
+    "difficulty": "intermediate",
+    "contribution_notes": "The project documents a first-contribution path. Examples, docstrings, and estimator tests are common starting work."
+  },
+  {
+    "full_name": "matplotlib/matplotlib",
+    "html_url": "https://github.com/matplotlib/matplotlib",
+    "description": "Python plotting library for charts and figures.",
+    "languages": ["Python"],
+    "skills": ["python", "matplotlib", "visualization", "data"],
+    "domains": ["visualization"],
+    "difficulty": "beginner",
+    "contribution_notes": "Gallery examples and documentation issues are a direct fit for someone who already makes charts."
+  },
+  {
+    "full_name": "streamlit/streamlit",
+    "html_url": "https://github.com/streamlit/streamlit",
+    "description": "Turn Python scripts into data apps with a small widget API.",
+    "languages": ["Python", "TypeScript"],
+    "skills": ["python", "typescript", "react", "data", "streamlit"],
+    "domains": ["data", "web"],
+    "difficulty": "beginner",
+    "contribution_notes": "Docs, examples, and frontend widget polish are open to people who have built small data apps."
+  },
+  {
+    "full_name": "jupyter/notebook",
+    "html_url": "https://github.com/jupyter/notebook",
+    "description": "The Jupyter Notebook interface for running code, markdown, and plots in the browser.",
+    "languages": ["Python", "TypeScript"],
+    "skills": ["python", "typescript", "jupyter", "notebooks"],
+    "domains": ["data", "scientific"],
+    "difficulty": "intermediate",
+    "contribution_notes": "UI bugs and documentation suit someone who uses notebooks daily."
+  },
+  {
+    "full_name": "encode/httpx",
+    "html_url": "https://github.com/encode/httpx",
+    "description": "A Python HTTP client with sync and async APIs.",
+    "languages": ["Python"],
+    "skills": ["python", "http", "async", "httpx"],
+    "domains": ["networking"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Issues are often about HTTP edge cases. Comfort with async Python is the useful background."
+  },
+  {
+    "full_name": "sqlalchemy/sqlalchemy",
+    "html_url": "https://github.com/sqlalchemy/sqlalchemy",
+    "description": "SQL toolkit and ORM for Python.",
+    "languages": ["Python"],
+    "skills": ["python", "sql", "orm", "postgresql", "sqlite"],
+    "domains": ["databases"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Documentation and dialect tests are the on-ramp. Core compiler changes need existing SQLAlchemy experience."
+  },
+  {
+    "full_name": "pallets/click",
+    "html_url": "https://github.com/pallets/click",
+    "description": "A Python library for command-line interfaces.",
+    "languages": ["Python"],
+    "skills": ["python", "cli", "click"],
+    "domains": ["tooling"],
+    "difficulty": "beginner",
+    "contribution_notes": "Docs and small behavior bugs are a good match for someone who has built CLIs."
+  },
+  {
+    "full_name": "astral-sh/ruff",
+    "html_url": "https://github.com/astral-sh/ruff",
+    "description": "An extremely fast Python linter and formatter, written in Rust.",
+    "languages": ["Rust", "Python"],
+    "skills": ["rust", "python", "linting", "ruff"],
+    "domains": ["tooling"],
+    "difficulty": "intermediate",
+    "contribution_notes": "New lint rules and docs are labeled for contributors. Rust experience helps, and Python rule ideas are still useful."
+  },
+  {
+    "full_name": "huggingface/transformers",
+    "html_url": "https://github.com/huggingface/transformers",
+    "description": "Model definitions and training utilities for language, vision, and audio models.",
+    "languages": ["Python"],
+    "skills": ["python", "pytorch", "machine learning", "nlp", "transformers"],
+    "domains": ["machine learning"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Docs, examples, and model-card fixes are approachable. Architecture changes suit someone who has trained or fine-tuned models."
+  },
+  {
+    "full_name": "pytorch/pytorch",
+    "html_url": "https://github.com/pytorch/pytorch",
+    "description": "Tensor library and automatic differentiation system used to train neural networks.",
+    "languages": ["Python", "C++"],
+    "skills": ["python", "c++", "pytorch", "cuda", "machine learning"],
+    "domains": ["machine learning"],
+    "difficulty": "advanced",
+    "contribution_notes": "The project is large. Documentation, tests, and a single operator are more realistic than core dispatcher work unless the person already writes PyTorch extensions."
+  },
+  {
+    "full_name": "apache/airflow",
+    "html_url": "https://github.com/apache/airflow",
+    "description": "A platform for authoring and scheduling data pipelines.",
+    "languages": ["Python"],
+    "skills": ["python", "airflow", "sql", "etl", "docker"],
+    "domains": ["data"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Provider docs and small operator fixes are a fit for someone who has run data jobs."
+  },
+  {
+    "full_name": "apache/superset",
+    "html_url": "https://github.com/apache/superset",
+    "description": "A data exploration and charting application. Flask on the server, React in the browser.",
+    "languages": ["Python", "TypeScript"],
+    "skills": ["python", "flask", "react", "typescript", "sql", "visualization"],
+    "domains": ["data", "visualization"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Chart docs, frontend polish, and SQL lab bugs match a mix of Python and React experience."
+  },
+  {
+    "full_name": "facebook/react",
+    "html_url": "https://github.com/facebook/react",
+    "description": "A JavaScript library for building user interfaces from components.",
+    "languages": ["JavaScript"],
+    "skills": ["javascript", "react", "typescript", "ui"],
+    "domains": ["web"],
+    "difficulty": "intermediate",
+    "contribution_notes": "The website and docs accept contributions from people who use React. Compiler and reconciler changes need deeper runtime experience."
+  },
+  {
+    "full_name": "vuejs/core",
+    "html_url": "https://github.com/vuejs/core",
+    "description": "The Vue 3 framework for building component-based interfaces.",
+    "languages": ["TypeScript"],
+    "skills": ["javascript", "typescript", "vue", "ui"],
+    "domains": ["web"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Docs and small reactivity bugs are the on-ramp for someone who has shipped Vue apps."
+  },
+  {
+    "full_name": "sveltejs/svelte",
+    "html_url": "https://github.com/sveltejs/svelte",
+    "description": "A compiler that turns component files into small JavaScript UI code.",
+    "languages": ["JavaScript", "TypeScript"],
+    "skills": ["javascript", "typescript", "svelte", "ui"],
+    "domains": ["web"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Documentation and compiler tests are approachable for someone who has built with Svelte."
+  },
+  {
+    "full_name": "vercel/next.js",
+    "html_url": "https://github.com/vercel/next.js",
+    "description": "A React framework for server-rendered and static web applications.",
+    "languages": ["JavaScript", "TypeScript"],
+    "skills": ["javascript", "typescript", "react", "next.js", "web"],
+    "domains": ["web"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Docs and examples move quickly. A person who has deployed a Next.js app can start with those before touching the compiler."
+  },
+  {
+    "full_name": "vitejs/vite",
+    "html_url": "https://github.com/vitejs/vite",
+    "description": "Frontend tooling: a dev server and production bundler for JavaScript projects.",
+    "languages": ["TypeScript"],
+    "skills": ["javascript", "typescript", "vite", "tooling"],
+    "domains": ["tooling", "web"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Docs, plugin examples, and small dev-server bugs suit someone who already uses Vite."
+  },
+  {
+    "full_name": "expressjs/express",
+    "html_url": "https://github.com/expressjs/express",
+    "description": "A minimal Node.js framework for HTTP servers.",
+    "languages": ["JavaScript"],
+    "skills": ["javascript", "node.js", "express", "http", "api"],
+    "domains": ["web", "api"],
+    "difficulty": "beginner",
+    "contribution_notes": "The code is small. Docs and middleware examples are a realistic first patch for someone who has written Express routes."
+  },
+  {
+    "full_name": "prettier/prettier",
+    "html_url": "https://github.com/prettier/prettier",
+    "description": "An opinionated formatter for JavaScript, TypeScript, and related languages.",
+    "languages": ["JavaScript", "TypeScript"],
+    "skills": ["javascript", "typescript", "tooling", "prettier"],
+    "domains": ["tooling"],
+    "difficulty": "beginner",
+    "contribution_notes": "Many issues are formatting edge cases with a failing fixture. That is a good match for someone who uses Prettier every day."
+  },
+  {
+    "full_name": "eslint/eslint",
+    "html_url": "https://github.com/eslint/eslint",
+    "description": "A pluggable linter for JavaScript.",
+    "languages": ["JavaScript"],
+    "skills": ["javascript", "eslint", "linting", "tooling"],
+    "domains": ["tooling"],
+    "difficulty": "intermediate",
+    "contribution_notes": "New rules and docs are labeled for contributors who already configure ESLint."
+  },
+  {
+    "full_name": "tailwindlabs/tailwindcss",
+    "html_url": "https://github.com/tailwindlabs/tailwindcss",
+    "description": "A utility-first CSS framework.",
+    "languages": ["TypeScript", "CSS"],
+    "skills": ["css", "tailwind", "typescript", "html", "ui"],
+    "domains": ["web"],
+    "difficulty": "beginner",
+    "contribution_notes": "Documentation fixes are the common first contribution for people who build interfaces with Tailwind."
+  },
+  {
+    "full_name": "microsoft/playwright",
+    "html_url": "https://github.com/microsoft/playwright",
+    "description": "Browser automation for end-to-end tests in Chromium, Firefox, and WebKit.",
+    "languages": ["TypeScript"],
+    "skills": ["typescript", "javascript", "testing", "playwright"],
+    "domains": ["testing"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Docs and test examples are a fit for someone who has written browser tests."
+  },
+  {
+    "full_name": "storybookjs/storybook",
+    "html_url": "https://github.com/storybookjs/storybook",
+    "description": "A workshop for building UI components in isolation.",
+    "languages": ["TypeScript"],
+    "skills": ["typescript", "react", "storybook", "ui", "testing"],
+    "domains": ["web"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Docs, examples, and addon bugs match frontend developers who already use Storybook."
+  },
+  {
+    "full_name": "mrdoob/three.js",
+    "html_url": "https://github.com/mrdoob/three.js",
+    "description": "A JavaScript 3D library built on WebGL.",
+    "languages": ["JavaScript"],
+    "skills": ["javascript", "webgl", "three.js", "graphics"],
+    "domains": ["graphics"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Examples and docs are the usual start. Renderer internals suit someone who has already shipped a Three.js scene."
+  },
+  {
+    "full_name": "d3/d3",
+    "html_url": "https://github.com/d3/d3",
+    "description": "JavaScript tools for binding data to documents and drawing charts.",
+    "languages": ["JavaScript"],
+    "skills": ["javascript", "d3", "visualization", "svg"],
+    "domains": ["visualization"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Documentation and examples are the right scale for someone who has built charts with D3."
+  },
+  {
+    "full_name": "withastro/astro",
+    "html_url": "https://github.com/withastro/astro",
+    "description": "A web framework for content-heavy sites, with islands of client-side JavaScript.",
+    "languages": ["TypeScript"],
+    "skills": ["typescript", "javascript", "astro", "html", "css"],
+    "domains": ["web"],
+    "difficulty": "beginner",
+    "contribution_notes": "Docs and examples are active. Someone who has published an Astro site can fix those without learning the compiler first."
+  },
+  {
+    "full_name": "prisma/prisma",
+    "html_url": "https://github.com/prisma/prisma",
+    "description": "A TypeScript ORM and database toolkit.",
+    "languages": ["TypeScript"],
+    "skills": ["typescript", "prisma", "sql", "postgresql", "orm"],
+    "domains": ["databases"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Docs and client examples are approachable. Query-engine work is for people already deep in databases."
+  },
+  {
+    "full_name": "nodejs/node",
+    "html_url": "https://github.com/nodejs/node",
+    "description": "The Node.js JavaScript runtime.",
+    "languages": ["JavaScript", "C++"],
+    "skills": ["javascript", "c++", "node.js"],
+    "domains": ["tooling"],
+    "difficulty": "advanced",
+    "contribution_notes": "Documentation is the realistic first patch. Core C++ changes need existing runtime experience."
+  },
+  {
+    "full_name": "denoland/deno",
+    "html_url": "https://github.com/denoland/deno",
+    "description": "A JavaScript and TypeScript runtime written in Rust.",
+    "languages": ["Rust", "TypeScript"],
+    "skills": ["rust", "typescript", "javascript", "deno"],
+    "domains": ["tooling"],
+    "difficulty": "advanced",
+    "contribution_notes": "Docs and the standard library are more approachable than the runtime core. Rust experience matters for most code changes."
+  },
+  {
+    "full_name": "gin-gonic/gin",
+    "html_url": "https://github.com/gin-gonic/gin",
+    "description": "An HTTP web framework for Go.",
+    "languages": ["Go"],
+    "skills": ["go", "http", "api", "gin"],
+    "domains": ["web", "api"],
+    "difficulty": "beginner",
+    "contribution_notes": "Docs, examples, and small middleware fixes suit someone who has written Go HTTP handlers."
+  },
+  {
+    "full_name": "cli/cli",
+    "html_url": "https://github.com/cli/cli",
+    "description": "The official GitHub command-line tool, written in Go.",
+    "languages": ["Go"],
+    "skills": ["go", "cli", "github"],
+    "domains": ["tooling"],
+    "difficulty": "intermediate",
+    "contribution_notes": "The project labels help-wanted issues. Someone who uses `gh` and writes Go can pick up a command bug."
+  },
+  {
+    "full_name": "gohugoio/hugo",
+    "html_url": "https://github.com/gohugoio/hugo",
+    "description": "A static site generator written in Go.",
+    "languages": ["Go"],
+    "skills": ["go", "hugo", "markdown", "html"],
+    "domains": ["web"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Docs and template bugs are a fit for people who already publish sites with Hugo."
+  },
+  {
+    "full_name": "golang/go",
+    "html_url": "https://github.com/golang/go",
+    "description": "The Go programming language and its standard library.",
+    "languages": ["Go"],
+    "skills": ["go"],
+    "domains": ["languages"],
+    "difficulty": "advanced",
+    "contribution_notes": "The wiki explains how to send a change. Small standard-library docs and tests are more realistic than compiler work."
+  },
+  {
+    "full_name": "opentofu/opentofu",
+    "html_url": "https://github.com/opentofu/opentofu",
+    "description": "Open-source infrastructure as code. A fork of Terraform under a FOSS license.",
+    "languages": ["Go"],
+    "skills": ["go", "terraform", "opentofu", "infrastructure", "cloud"],
+    "domains": ["infrastructure"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Docs and provider examples match people who already write infrastructure code."
+  },
+  {
+    "full_name": "prometheus/prometheus",
+    "html_url": "https://github.com/prometheus/prometheus",
+    "description": "Monitoring system and time-series database, written in Go.",
+    "languages": ["Go"],
+    "skills": ["go", "prometheus", "metrics", "observability"],
+    "domains": ["observability"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Documentation and exporter-adjacent bugs are the start. Query-engine work needs existing Prometheus experience."
+  },
+  {
+    "full_name": "grafana/grafana",
+    "html_url": "https://github.com/grafana/grafana",
+    "description": "Dashboards and alerting for metrics, logs, and traces. Go backend, TypeScript frontend.",
+    "languages": ["Go", "TypeScript"],
+    "skills": ["go", "typescript", "react", "grafana", "observability"],
+    "domains": ["observability", "visualization"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Panel docs and frontend bugs are approachable for someone who has built Grafana dashboards."
+  },
+  {
+    "full_name": "BurntSushi/ripgrep",
+    "html_url": "https://github.com/BurntSushi/ripgrep",
+    "description": "A line-oriented search tool written in Rust.",
+    "languages": ["Rust"],
+    "skills": ["rust", "cli", "search"],
+    "domains": ["tooling"],
+    "difficulty": "advanced",
+    "contribution_notes": "The tool is finished and careful. Docs and narrow search bugs suit someone who already writes Rust CLIs."
+  },
+  {
+    "full_name": "tokio-rs/tokio",
+    "html_url": "https://github.com/tokio-rs/tokio",
+    "description": "The async runtime most Rust network services use.",
+    "languages": ["Rust"],
+    "skills": ["rust", "async", "networking", "tokio"],
+    "domains": ["networking"],
+    "difficulty": "advanced",
+    "contribution_notes": "Docs and examples are the on-ramp. Scheduler changes need existing async Rust experience."
+  },
+  {
+    "full_name": "rust-lang/rust",
+    "html_url": "https://github.com/rust-lang/rust",
+    "description": "The Rust programming language, compiler, and standard library.",
+    "languages": ["Rust"],
+    "skills": ["rust"],
+    "domains": ["languages"],
+    "difficulty": "advanced",
+    "contribution_notes": "The compiler labels easy issues, but most of them still assume you can build Rust from source. Docs and error-message fixes are the usual start."
+  },
+  {
+    "full_name": "spring-projects/spring-boot",
+    "html_url": "https://github.com/spring-projects/spring-boot",
+    "description": "A framework for production-ready Java and Kotlin services.",
+    "languages": ["Java"],
+    "skills": ["java", "kotlin", "spring", "spring boot", "api"],
+    "domains": ["web", "api"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Documentation and samples are the realistic first contribution for someone who has built Spring Boot services."
+  },
+  {
+    "full_name": "flutter/flutter",
+    "html_url": "https://github.com/flutter/flutter",
+    "description": "A UI toolkit for mobile, web, and desktop apps, using Dart.",
+    "languages": ["Dart"],
+    "skills": ["dart", "flutter", "mobile", "ui"],
+    "domains": ["mobile"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Docs and framework examples are labeled for new contributors who have shipped a Flutter app."
+  },
+  {
+    "full_name": "godotengine/godot",
+    "html_url": "https://github.com/godotengine/godot",
+    "description": "A game engine. The editor and runtime are C++, with GDScript for games.",
+    "languages": ["C++"],
+    "skills": ["c++", "gdscript", "games", "godot"],
+    "domains": ["games"],
+    "difficulty": "intermediate",
+    "contribution_notes": "The engine tags junior jobs. Docs, editor usability, and GDScript demos are a better start than the renderer."
+  },
+  {
+    "full_name": "opencv/opencv",
+    "html_url": "https://github.com/opencv/opencv",
+    "description": "Computer vision and image processing, with C++ and Python APIs.",
+    "languages": ["C++", "Python"],
+    "skills": ["c++", "python", "opencv", "computer vision"],
+    "domains": ["vision"],
+    "difficulty": "advanced",
+    "contribution_notes": "Python samples and docs are approachable. Algorithm changes suit someone who already uses OpenCV."
+  },
+  {
+    "full_name": "microsoft/vscode",
+    "html_url": "https://github.com/microsoft/vscode",
+    "description": "A source-code editor built with TypeScript and Electron.",
+    "languages": ["TypeScript"],
+    "skills": ["typescript", "javascript", "electron", "editor"],
+    "domains": ["tooling"],
+    "difficulty": "intermediate",
+    "contribution_notes": "The wiki explains how to build the editor. Extension-host docs and small workbench bugs are a fit for daily VS Code users who write TypeScript."
+  },
+  {
+    "full_name": "electron/electron",
+    "html_url": "https://github.com/electron/electron",
+    "description": "A framework for desktop apps using JavaScript, HTML, and CSS.",
+    "languages": ["C++", "TypeScript"],
+    "skills": ["javascript", "typescript", "c++", "electron", "desktop"],
+    "domains": ["desktop"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Docs and small API fixes are approachable. Chromium upgrades are not a first task."
+  },
+  {
+    "full_name": "Homebrew/brew",
+    "html_url": "https://github.com/Homebrew/brew",
+    "description": "A package manager for macOS and Linux, written in Ruby.",
+    "languages": ["Ruby"],
+    "skills": ["ruby", "homebrew", "packaging", "cli"],
+    "domains": ["tooling"],
+    "difficulty": "beginner",
+    "contribution_notes": "Formulae, docs, and small Ruby fixes are a common first contribution for people who use Homebrew."
+  },
+  {
+    "full_name": "rails/rails",
+    "html_url": "https://github.com/rails/rails",
+    "description": "A Ruby web framework with routing, an ORM, and server-rendered views.",
+    "languages": ["Ruby"],
+    "skills": ["ruby", "rails", "sql", "html", "web"],
+    "domains": ["web"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Rails marks issues for new contributors. Guides and small Active Record fixes match people who have built a Rails app."
+  },
+  {
+    "full_name": "chatwoot/chatwoot",
+    "html_url": "https://github.com/chatwoot/chatwoot",
+    "description": "Customer support chat. Ruby on Rails on the server, Vue in the browser.",
+    "languages": ["Ruby", "JavaScript"],
+    "skills": ["ruby", "rails", "vue", "javascript", "postgresql"],
+    "domains": ["chat", "web"],
+    "difficulty": "beginner",
+    "contribution_notes": "The project labels good first issues across the Rails API and the Vue inbox."
+  },
+  {
+    "full_name": "laravel/framework",
+    "html_url": "https://github.com/laravel/framework",
+    "description": "The Laravel PHP framework for web applications.",
+    "languages": ["PHP"],
+    "skills": ["php", "laravel", "web", "sql"],
+    "domains": ["web"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Docs and small framework bugs are a fit for someone who has shipped a Laravel app."
+  },
+  {
+    "full_name": "mdn/content",
+    "html_url": "https://github.com/mdn/content",
+    "description": "The source of MDN Web Docs for HTML, CSS, and JavaScript.",
+    "languages": ["Markdown"],
+    "skills": ["html", "css", "javascript", "documentation", "markdown"],
+    "domains": ["documentation", "web"],
+    "difficulty": "beginner",
+    "contribution_notes": "Writing and correcting docs is the work. Strong web-platform knowledge matters more than a large codebase."
+  },
+  {
+    "full_name": "kubernetes/website",
+    "html_url": "https://github.com/kubernetes/website",
+    "description": "The Kubernetes documentation site.",
+    "languages": ["Markdown"],
+    "skills": ["kubernetes", "documentation", "markdown", "go"],
+    "domains": ["documentation", "infrastructure"],
+    "difficulty": "beginner",
+    "contribution_notes": "Localization and doc fixes are the intended first contribution for people who use Kubernetes."
+  },
+  {
+    "full_name": "freeCodeCamp/freeCodeCamp",
+    "html_url": "https://github.com/freeCodeCamp/freeCodeCamp",
+    "description": "A free coding curriculum and its learning platform.",
+    "languages": ["JavaScript", "TypeScript"],
+    "skills": ["javascript", "typescript", "react", "node.js", "education"],
+    "domains": ["education", "web"],
+    "difficulty": "beginner",
+    "contribution_notes": "Curriculum lessons and UI copy are written so a first contribution can be a single lesson or a small bug."
+  },
+  {
+    "full_name": "TheAlgorithms/Python",
+    "html_url": "https://github.com/TheAlgorithms/Python",
+    "description": "A collection of Python algorithms with explanations and tests.",
+    "languages": ["Python"],
+    "skills": ["python", "algorithms", "testing"],
+    "domains": ["education"],
+    "difficulty": "beginner",
+    "contribution_notes": "Adding a well-tested algorithm or fixing an explanation is a contained first change."
+  },
+  {
+    "full_name": "public-apis/public-apis",
+    "html_url": "https://github.com/public-apis/public-apis",
+    "description": "A curated directory of free APIs.",
+    "languages": ["Python"],
+    "skills": ["documentation", "api", "markdown"],
+    "domains": ["documentation", "api"],
+    "difficulty": "beginner",
+    "contribution_notes": "Entries are small markdown edits. Useful when the resume shows API work and the person wants a first merged pull request."
+  },
+  {
+    "full_name": "ansible/ansible",
+    "html_url": "https://github.com/ansible/ansible",
+    "description": "IT automation in Python: playbooks, modules, and inventory.",
+    "languages": ["Python"],
+    "skills": ["python", "ansible", "linux", "automation", "yaml"],
+    "domains": ["infrastructure"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Module docs and small bug fixes match people who already write playbooks."
+  },
+  {
+    "full_name": "ohmyzsh/ohmyzsh",
+    "html_url": "https://github.com/ohmyzsh/ohmyzsh",
+    "description": "A community configuration and plugin set for the Zsh shell.",
+    "languages": ["Shell"],
+    "skills": ["shell", "zsh", "linux", "cli"],
+    "domains": ["tooling"],
+    "difficulty": "beginner",
+    "contribution_notes": "Plugins and docs are small shell scripts. A good fit for someone who lives in the terminal."
+  },
+  {
+    "full_name": "mozilla/pdf.js",
+    "html_url": "https://github.com/mozilla/pdf.js",
+    "description": "A PDF reader built with JavaScript.",
+    "languages": ["JavaScript"],
+    "skills": ["javascript", "pdf", "html", "css"],
+    "domains": ["web"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Viewer UI bugs and docs are more approachable than the PDF parser."
+  },
+  {
+    "full_name": "pocketbase/pocketbase",
+    "html_url": "https://github.com/pocketbase/pocketbase",
+    "description": "An open-source backend in a single binary: database, auth, and a dashboard. Written in Go.",
+    "languages": ["Go", "JavaScript"],
+    "skills": ["go", "javascript", "sqlite", "auth", "api"],
+    "domains": ["backend"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Dashboard polish and docs suit someone who has used PocketBase as a backend."
+  },
+  {
+    "full_name": "supabase/supabase",
+    "html_url": "https://github.com/supabase/supabase",
+    "description": "A Postgres development platform: auth, storage, and auto-generated APIs.",
+    "languages": ["TypeScript"],
+    "skills": ["typescript", "postgresql", "sql", "react", "auth"],
+    "domains": ["backend", "databases"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Docs and studio UI issues are a fit for people who have built on Supabase."
+  },
+  {
+    "full_name": "appwrite/appwrite",
+    "html_url": "https://github.com/appwrite/appwrite",
+    "description": "A backend server for web and mobile apps, with auth, databases, and storage.",
+    "languages": ["TypeScript", "PHP"],
+    "skills": ["php", "typescript", "docker", "auth", "api"],
+    "domains": ["backend"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Docs and SDK examples are the usual start for someone who has integrated Appwrite."
+  },
+  {
+    "full_name": "strapi/strapi",
+    "html_url": "https://github.com/strapi/strapi",
+    "description": "A headless CMS built with JavaScript.",
+    "languages": ["JavaScript", "TypeScript"],
+    "skills": ["javascript", "typescript", "react", "node.js", "cms"],
+    "domains": ["web", "cms"],
+    "difficulty": "beginner",
+    "contribution_notes": "Admin UI bugs and docs are approachable for someone who has modeled content in Strapi."
+  },
+  {
+    "full_name": "nocodb/nocodb",
+    "html_url": "https://github.com/nocodb/nocodb",
+    "description": "An open-source spreadsheet interface on top of relational databases.",
+    "languages": ["TypeScript"],
+    "skills": ["typescript", "vue", "node.js", "sql", "postgresql"],
+    "domains": ["databases"],
+    "difficulty": "intermediate",
+    "contribution_notes": "UI and docs issues are a match for people who have used NocoDB with Postgres or MySQL."
+  },
+  {
+    "full_name": "calcom/cal.com",
+    "html_url": "https://github.com/calcom/cal.com",
+    "description": "Open-source scheduling. A Next.js application with a Prisma database.",
+    "languages": ["TypeScript"],
+    "skills": ["typescript", "react", "next.js", "prisma", "postgresql"],
+    "domains": ["web"],
+    "difficulty": "intermediate",
+    "contribution_notes": "The product is a full Next.js app. UI bugs and booking-flow docs suit someone who has built similar applications."
+  },
+  {
+    "full_name": "paperless-ngx/paperless-ngx",
+    "html_url": "https://github.com/paperless-ngx/paperless-ngx",
+    "description": "A document archive. Django, a consumer for OCR, and a web UI.",
+    "languages": ["Python", "TypeScript"],
+    "skills": ["python", "django", "typescript", "ocr", "docker"],
+    "domains": ["web"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Docs and small Django or UI fixes match someone who self-hosts the app or has built Django sites."
+  },
+  {
+    "full_name": "immich-app/immich",
+    "html_url": "https://github.com/immich-app/immich",
+    "description": "A self-hosted photo and video backup service. The server and apps are TypeScript.",
+    "languages": ["TypeScript"],
+    "skills": ["typescript", "react", "nestjs", "postgresql", "mobile"],
+    "domains": ["mobile", "web"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Mobile and web UI issues are labeled for contributors who use the product."
+  },
+  {
+    "full_name": "mattermost/mattermost",
+    "html_url": "https://github.com/mattermost/mattermost",
+    "description": "Team chat. A Go server and a React web app.",
+    "languages": ["Go", "TypeScript"],
+    "skills": ["go", "typescript", "react", "postgresql"],
+    "domains": ["chat", "web"],
+    "difficulty": "intermediate",
+    "contribution_notes": "Help-wanted issues span the Go API and the React client. Web UI bugs are the smaller starting point."
+  },
+  {
+    "full_name": "git/git",
+    "html_url": "https://github.com/git/git",
+    "description": "The Git version-control system, written in C.",
+    "languages": ["C"],
+    "skills": ["c", "git"],
+    "domains": ["tooling"],
+    "difficulty": "advanced",
+    "contribution_notes": "Documentation and tests are the published on-ramp. The mailing-list workflow is part of the contribution, and C experience matters."
+  },
+  {
+    "full_name": "postgres/postgres",
+    "html_url": "https://github.com/postgres/postgres",
+    "description": "The PostgreSQL relational database, written in C.",
+    "languages": ["C"],
+    "skills": ["c", "postgresql", "sql"],
+    "domains": ["databases"],
+    "difficulty": "advanced",
+    "contribution_notes": "Docs are reviewed on the mailing lists. Code changes assume you already know Postgres internals or are willing to read a subsystem carefully."
+  }
+]
