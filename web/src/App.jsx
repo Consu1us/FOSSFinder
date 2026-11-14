@@ -32,7 +32,7 @@ export default function App() {
       return;
     }
     setBusy(true);
-    setStatus("Reading the resume and matching reviewed repositories…");
+    setStatus("Evaluating the resume and finding suitable repos...");
     setResult(null);
     try {
       const body = new FormData();
@@ -47,7 +47,7 @@ export default function App() {
       setStatus(
         payload.used_fallback
           ? "Ranked from skill overlap because Gemini ranking was unavailable."
-          : "Matched against the reviewed repository list."
+          : "Here are some repositories that might be a good fit for you."
       );
     } catch {
       setStatus("The request did not finish. Check that the API is running.");
@@ -59,10 +59,10 @@ export default function App() {
   return (
     <main>
       <p className="kicker">Find FOSS fast</p>
-      <h1>Repositories you can actually contribute to.</h1>
+      <h1>Projects you can actually contribute to.</h1>
       <p className="lede">
-        Upload a PDF resume. Gemini reads the skills you listed and the ones your
-        experience shows, then matches them to a reviewed set of open-source
+        Upload your resume (PDF). We'll read the skills you've listed and the ones your
+        experience shows, then match them to a set of open-source
         GitHub repositories.
       </p>
       <ol className="steps">
@@ -96,7 +96,7 @@ export default function App() {
             onChange={(event) => takeFile(event.target.files?.[0])}
           />
         </label>
-        <p className="privacy">Resumes and personal information are not stored.</p>
+        <p className="privacy">Resumes and personal information are never stored, and promptly deleted.</p>
         <button type="submit" disabled={busy}>
           {busy ? "Matching…" : "Find repositories"}
         </button>
@@ -200,13 +200,13 @@ function workflowLabel(workflow) {
 function ContributingGuide({ url }) {
   return (
     <div className="guide">
-      <h3>Contributing guide</h3>
+      <h3>Contribution guide</h3>
       {url ? (
         <a href={url} target="_blank" rel="noreferrer">
-          Open the contributing guide
+          Open the contribution guide
         </a>
       ) : (
-        <p className="meta">No contributing guide was found for this repository.</p>
+        <p className="meta">No contribution guide was found for this repository.</p>
       )}
     </div>
   );
@@ -216,7 +216,7 @@ function IssueList({ issues }) {
   if (!issues?.length) {
     return (
       <p className="meta">
-        No open starter issue came back from GitHub. The contributing guide is the next place to look.
+        No "good first issue" came back from GitHub. Try looking in the contribution guide instead.
       </p>
     );
   }

@@ -29,11 +29,11 @@ RETRYABLE_STATUSES = {"UNAVAILABLE", "RESOURCE_EXHAUSTED", "INTERNAL"}
 
 BUSY_MESSAGE = (
     "Gemini is busy right now and could not read the resume. "
-    "Wait a few seconds and try again."
+    "Please wait a few seconds then try again."
 )
 REJECTED_MESSAGE = (
     "Gemini could not read this resume. "
-    "Check the API key and model in .env, then try again."
+    "Make sure it's in a format that Gemini can read, then try again."
 )
 
 PROFILE_SCHEMA = {
@@ -223,7 +223,6 @@ class GeminiMatcher:
             "Prefer overlap with skills_listed and skills_inferred, then a difficulty that fits seniority. "
             "why: write in the first person, as yourself speaking directly to this person. "
             "Two or three sentences. Name the skills that transfer and the kind of change they could make. "
-            "Shape it like: I think you'd be a good fit here because your work with ... "
             "project_description: 2 to 4 sentences on what the project is and what contributing looks like. "
             "Use only the catalog description, languages, skills, domains, difficulty, contribution_notes, "
             "and contribution_workflow. Do not invent maintainers, issue counts, release history, or a "
