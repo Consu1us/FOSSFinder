@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.catalog import load_catalog
 from app.config import ROOT, get_settings
-from app.gemini_client import GeminiMatcher
+from app.gemini_client import GeminiMatcher, GeminiProfileError
 from app.github_client import GitHubSearch
 from app.matching import fallback_rank_repos, shortlist_repos
 from app.pdf_text import extract_resume_text
@@ -168,6 +168,7 @@ def health():
         "catalog_seeded": startup_status["catalog_seeded"],
         "catalog_repos": catalog,
         "model": settings.gemini_model,
+        "fallback_model": settings.gemini_fallback_model,
         "github_token": bool(settings.github_token),
         "public_url": settings.public_url,
     }
@@ -216,11 +217,15 @@ def match_resume(resume: UploadFile = File(...)):
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"Could not read that PDF: {exc}") from exc
 
-    gemini = GeminiMatcher(settings.gemini_api_key, settings.gemini_model)
+    gemini = GeminiMatcher(
+        settings.gemini_api_key,
+        settings.gemini_model,
+        settings.gemini_fallback_model,
+    )
     try:
         profile = gemini.profile_from_resume(resume_text)
-    except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Gemini could not read the resume: {exc}") from exc
+    except GeminiProfileError as exc:
+        raise HTTPException(status_code=503 if exc.busy else 502, detail=str(exc)) from exc
 
     try:
         store = get_store(settings.mongodb_uri, settings.mongodb_db)
