@@ -2,6 +2,7 @@ from contextlib import contextmanager
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -18,12 +19,14 @@ STATIC = ROOT / "app" / "static"
 DIST = ROOT / "web" / "dist"
 
 app = FastAPI(title="FOSSFinder", version="0.2.0")
+_settings = get_settings()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
+    allow_origins=_settings.cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=_settings.allowed_hosts)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 if (DIST / "assets").is_dir():
     app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
@@ -87,6 +90,7 @@ def health():
         "catalog_repos": catalog,
         "model": settings.gemini_model,
         "github_token": bool(settings.github_token),
+        "public_url": settings.public_url,
     }
 
 

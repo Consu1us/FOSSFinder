@@ -1,6 +1,7 @@
 import unittest
 
 from app.catalog import REQUIRED, load_catalog
+from app.config import site_access
 from app.matching import fallback_rank_repos, profile_terms, shortlist_repos
 from app.scoring import fallback_rank
 
@@ -80,6 +81,16 @@ class ScoringTests(unittest.TestCase):
         ranked = fallback_rank(profile, issues)
         self.assertEqual(ranked[0]["issue_url"], issues[1]["html_url"])
         self.assertGreater(ranked[0]["score"], ranked[1]["score"])
+
+
+class SiteAccessTests(unittest.TestCase):
+    def test_fossfinder_work_allows_www_and_localhost(self):
+        public, hosts, origins = site_access("https://fossfinder.work")
+        self.assertEqual(public, "https://fossfinder.work")
+        self.assertIn("www.fossfinder.work", hosts)
+        self.assertIn("127.0.0.1", hosts)
+        self.assertIn("https://fossfinder.work", origins)
+        self.assertIn("https://www.fossfinder.work", origins)
 
 
 if __name__ == "__main__":

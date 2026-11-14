@@ -1,0 +1,14 @@
+[Unit]
+Description=FOSSFinder
+After=network.target
+
+[Service]
+User=fossfinder
+Group=fossfinder
+WorkingDirectory=/opt/fossfinder
+EnvironmentFile=/opt/fossfinder/.env
+ExecStart=/opt/fossfinder/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips=127.0.0.1
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
