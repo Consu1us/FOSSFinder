@@ -32,7 +32,7 @@ export default function App() {
       return;
     }
     setBusy(true);
-    setStatus("Evaluating the resume and finding suitable repos...");
+    setStatus("Evaluating your resume and finding suitable repos...");
     setResult(null);
     try {
       const body = new FormData();
