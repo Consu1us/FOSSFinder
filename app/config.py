@@ -4,6 +4,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 
+from app.gemini_client import normalize_timeout_seconds
+
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env")
 
@@ -15,6 +17,7 @@ class Settings:
     gemini_api_key: str
     gemini_model: str
     gemini_fallback_model: str
+    gemini_timeout_seconds: float
     github_token: str
 
     @property
@@ -35,5 +38,6 @@ def get_settings() -> Settings:
         gemini_model=os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
         or "gemini-3.8-flash",
         gemini_fallback_model=os.getenv("GEMINI_FALLBACK_MODEL", "").strip(),
+        gemini_timeout_seconds=normalize_timeout_seconds(os.getenv("GEMINI_TIMEOUT_SECONDS", "")),
         github_token=os.getenv("GITHUB_TOKEN", "").strip(),
     )
