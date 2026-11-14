@@ -12,6 +12,7 @@ ENV_EMPTY = {
     "MONGODB_DB": "fossfinder",
     "GEMINI_API_KEY": "",
     "GEMINI_MODEL": "",
+    "GEMINI_FALLBACK_MODEL": "",
     "GITHUB_TOKEN": "",
 }
 ENV_READY = {
@@ -19,6 +20,7 @@ ENV_READY = {
     "MONGODB_DB": "fossfinder",
     "GEMINI_API_KEY": "test-key",
     "GEMINI_MODEL": "",
+    "GEMINI_FALLBACK_MODEL": "",
     "GITHUB_TOKEN": "",
 }
 
@@ -92,6 +94,7 @@ class StartupTests(unittest.TestCase):
         self.assertIn("MONGODB_URI", body["missing"])
         self.assertIn("GEMINI_API_KEY", body["missing"])
         self.assertEqual(body["model"], "gemini-3.8-flash")
+        self.assertEqual(body["fallback_model"], "")
 
     def test_catalog_is_seeded_once_at_startup(self):
         store = _CountingStore()
