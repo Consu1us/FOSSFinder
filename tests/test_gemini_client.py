@@ -120,6 +120,7 @@ class ProfileRetryTests(unittest.TestCase):
         )
         self.assertEqual(len(delays), 1)
         self.assertEqual(client.models.calls[0]["config"].http_options.timeout, REQUEST_TIMEOUT_MS)
+        self.assertGreaterEqual(client.models.calls[0]["config"].http_options.timeout, 10_000)
         self.assertEqual(client.models.calls[0]["config"].http_options.retry_options.attempts, 1)
 
     def test_timeout_then_success(self):
@@ -151,6 +152,12 @@ class ProfileRetryTests(unittest.TestCase):
         self.assertEqual(len(client.models.calls), MAX_ATTEMPTS)
         self.assertTrue(all(call["model"] == "gemini-3.8-flash" for call in client.models.calls))
         self.assertEqual(len(delays), MAX_ATTEMPTS - 1)
+
+    def test_short_budget_does_not_call_gemini(self):
+        matcher, client, _delays = _matcher([_response(_profile_payload())])
+        with self.assertRaises(TimeoutError):
+            matcher._call_model("gemini-3.8-flash", "resume", {}, 5)
+        self.assertEqual(client.models.calls, [])
 
     def test_400_is_not_retried_or_sent_to_the_fallback(self):
         matcher, client, delays = _matcher(

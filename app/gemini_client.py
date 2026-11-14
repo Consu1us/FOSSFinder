@@ -9,14 +9,15 @@ from google.genai import types
 
 logger = logging.getLogger("fossfinder.gemini")
 
-# One HTTP call cannot hang longer than this. The SDK timeout is milliseconds.
-REQUEST_TIMEOUT_MS = 8_000
-# Stop before starting an attempt that would have almost no time left.
-MIN_ATTEMPT_S = 1.0
+# Gemini rejects a deadline under 10 seconds. The SDK timeout is milliseconds.
+MIN_TIMEOUT_MS = 10_000
+REQUEST_TIMEOUT_MS = 60_000
+# Stop before starting an attempt that would be rejected for a short deadline.
+MIN_ATTEMPT_S = MIN_TIMEOUT_MS / 1000
 MAX_ATTEMPTS = 3
-# Primary retries plus the optional backup model stay under about 25 seconds.
-PRIMARY_BUDGET_S = 16.0
-FALLBACK_BUDGET_S = 8.0
+# One full attempt fits in each budget. Faster failures can still retry.
+PRIMARY_BUDGET_S = 60.0
+FALLBACK_BUDGET_S = 60.0
 RETRY_BASE_S = 0.4
 RETRY_CAP_S = 3.0
 RETRY_JITTER_S = 0.25
@@ -244,9 +245,10 @@ class GeminiMatcher:
         last_error: BaseException | None = None
         for attempt in range(MAX_ATTEMPTS):
             remaining = deadline - self._clock()
-            if remaining < MIN_ATTEMPT_S:
+            remaining_ms = int(remaining * 1000)
+            if remaining_ms < MIN_TIMEOUT_MS:
                 break
-            timeout_ms = int(min(REQUEST_TIMEOUT_MS, remaining * 1000))
+            timeout_ms = min(REQUEST_TIMEOUT_MS, remaining_ms)
             try:
                 return self._client.models.generate_content(
                     model=model,

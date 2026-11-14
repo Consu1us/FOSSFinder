@@ -60,8 +60,8 @@ def get_settings() -> Settings:
         mongodb_uri=os.getenv("MONGODB_URI", "").strip(),
         mongodb_db=os.getenv("MONGODB_DB", "fossfinder").strip() or "fossfinder",
         gemini_api_key=os.getenv("GEMINI_API_KEY", "").strip(),
-        gemini_model=os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
-        or "gemini-3.8-flash",
+        gemini_model=os.getenv("GEMINI_MODEL", "gemini-3.5-flash").strip()
+        or "gemini-3.5-flash",
         gemini_fallback_model=os.getenv("GEMINI_FALLBACK_MODEL", "").strip(),
         github_token=os.getenv("GITHUB_TOKEN", "").strip(),
         public_url=public_url,

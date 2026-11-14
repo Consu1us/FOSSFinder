@@ -93,7 +93,7 @@ class StartupTests(unittest.TestCase):
         self.assertFalse(body["github_token"])
         self.assertIn("MONGODB_URI", body["missing"])
         self.assertIn("GEMINI_API_KEY", body["missing"])
-        self.assertEqual(body["model"], "gemini-3.8-flash")
+        self.assertEqual(body["model"], "gemini-3.5-flash")
         self.assertEqual(body["fallback_model"], "")
 
     def test_catalog_is_seeded_once_at_startup(self):
