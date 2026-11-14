@@ -758,5 +758,29 @@
     "domains": ["databases"],
     "difficulty": "advanced",
     "contribution_notes": "Docs are reviewed on the mailing lists. Code changes assume you already know Postgres internals or are willing to read a subsystem carefully."
+  },
+  {
+    "full_name": "torvalds/linux",
+    "html_url": "https://github.com/torvalds/linux",
+    "description": "The Linux kernel. The GitHub repository is a read-only mirror of a project developed by email.",
+    "languages": ["C"],
+    "skills": ["c", "linux", "kernel", "operating-systems"],
+    "domains": ["systems", "operating-systems"],
+    "difficulty": "advanced",
+    "contribution_workflow": "mailing-list",
+    "contributing_url": "https://docs.kernel.org/process/submitting-patches.html",
+    "contribution_notes": "torvalds/linux does not accept GitHub pull requests. Patches go by email to the subsystem mailing lists, following Documentation/process/submitting-patches.rst. This is a large C codebase; a first change is usually a small, reviewed fix in one subsystem."
+  },
+  {
+    "full_name": "OpenFOAM/OpenFOAM-dev",
+    "html_url": "https://github.com/OpenFOAM/OpenFOAM-dev",
+    "description": "A free CFD toolbox from the OpenFOAM Foundation. The GitHub repository is a mirror, not the place where changes are merged.",
+    "languages": ["C++"],
+    "skills": ["c++", "cfd", "numerical-methods", "fluid-dynamics"],
+    "domains": ["science", "simulation"],
+    "difficulty": "advanced",
+    "contribution_workflow": "external",
+    "contributing_url": "https://openfoam.org/dev/how-to-contribute/",
+    "contribution_notes": "OpenFOAM/OpenFOAM-dev does not take GitHub pull requests. The OpenFOAM Foundation reviews contributions through its own process and bug tracker. The ESI edition is developed separately on develop.openfoam.com. Expect a large C++ numerical codebase."
   }
 ]

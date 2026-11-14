@@ -104,6 +104,18 @@ button:disabled { opacity: 0.6; cursor: wait; }
 
 .status { min-height: 1.2em; margin: 0; color: var(--warn); }
 
+.privacy, .model-used {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.model-used { margin-top: 16px; }
+
+.guide { margin-top: 12px; }
+
+.guide h3 { margin-bottom: 4px; }
+
 .profile, .results { margin-top: 16px; padding: 18px; }
 
 .group { margin-top: 14px; }

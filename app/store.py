@@ -47,6 +47,7 @@ class AtlasStore:
         self.issues: Collection = self._db["issues"]
         self.matches: Collection = self._db["matches"]
         self.issue_cache: Collection = self._db["starter_issue_cache"]
+        self.guides: Collection = self._db["contributing_guides"]
         self.repos.create_index("full_name", unique=True)
         self.repos.create_index("reviewed")
         self.issues.create_index("html_url", unique=True)
@@ -58,6 +59,12 @@ class AtlasStore:
             name="repo_seniority",
         )
         self.issue_cache.create_index(
+            "cached_at",
+            expireAfterSeconds=int(STARTER_ISSUE_TTL.total_seconds()),
+            name="cached_at_ttl",
+        )
+        self.guides.create_index("repo_full_name", unique=True)
+        self.guides.create_index(
             "cached_at",
             expireAfterSeconds=int(STARTER_ISSUE_TTL.total_seconds()),
             name="cached_at_ttl",
@@ -129,12 +136,46 @@ class AtlasStore:
             count += 1
         return count
 
-    def save_match(self, profile: dict, rankings: list[dict]) -> str:
+    def cached_contributing_guide(self, full_name: str) -> str | None:
+        doc = self.guides.find_one(
+            {"repo_full_name": full_name},
+            {"_id": 0, "url": 1, "cached_at": 1},
+        )
+        if not doc:
+            return None
+        cached_at = doc.get("cached_at")
+        if not isinstance(cached_at, datetime) or not cache_is_fresh(cached_at):
+            return None
+        url = doc.get("url")
+        return url if isinstance(url, str) else ""
+
+    def cache_contributing_guide(self, full_name: str, url: str) -> None:
+        self.guides.update_one(
+            {"repo_full_name": full_name},
+            {
+                "$set": {
+                    "repo_full_name": full_name,
+                    "url": url or "",
+                    "cached_at": datetime.now(timezone.utc),
+                }
+            },
+            upsert=True,
+        )
+
+    def record_match(self, repo_names: list[str]) -> str:
+        names = []
+        seen: set[str] = set()
+        for name in repo_names:
+            cleaned = str(name or "").strip()
+            if not cleaned or cleaned in seen:
+                continue
+            seen.add(cleaned)
+            names.append(cleaned)
         result = self.matches.insert_one(
             {
-                "profile": profile,
-                "rankings": rankings,
                 "created_at": datetime.now(timezone.utc),
+                "recommendation_count": len(names),
+                "repos": names,
             }
         )
         return str(result.inserted_id)
@@ -145,4 +186,5 @@ class AtlasStore:
             "issues": self.issues.count_documents({}),
             "matches": self.matches.count_documents({}),
             "starter_issue_cache": self.issue_cache.count_documents({}),
+            "contributing_guides": self.guides.count_documents({}),
         }

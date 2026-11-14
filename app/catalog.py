@@ -13,6 +13,7 @@ REQUIRED = (
     "difficulty",
     "contribution_notes",
 )
+WORKFLOWS = {"github-pr", "mailing-list", "external"}
 
 
 def load_catalog() -> list[dict]:
@@ -36,11 +37,18 @@ def load_catalog() -> list[dict]:
                 "domains": [item.lower() for item in _strings(entry.get("domains"))],
                 "difficulty": str(entry.get("difficulty") or "intermediate").strip().lower(),
                 "contribution_notes": str(entry.get("contribution_notes") or "").strip(),
+                "contribution_workflow": _workflow(entry.get("contribution_workflow")),
+                "contributing_url": str(entry.get("contributing_url") or "").strip(),
                 "reviewed": True,
                 "source": "catalog",
             }
         )
     return repos
+
+
+def _workflow(value) -> str:
+    workflow = str(value or "github-pr").strip().lower()
+    return workflow if workflow in WORKFLOWS else "github-pr"
 
 
 def _strings(value) -> list[str]:

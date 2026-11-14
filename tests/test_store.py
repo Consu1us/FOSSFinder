@@ -89,6 +89,49 @@ class StarterIssueCacheTests(unittest.TestCase):
         self.assertIsNone(store.cached_starter_issues("a/b", "junior"))
 
 
+class ContributingGuideCacheTests(unittest.TestCase):
+    def test_empty_url_is_a_fresh_hit(self):
+        store = AtlasStore.__new__(AtlasStore)
+        store.guides = MagicMock()
+        store.guides.find_one.return_value = {
+            "url": "",
+            "cached_at": datetime.now(timezone.utc),
+        }
+        self.assertEqual(store.cached_contributing_guide("torvalds/linux"), "")
+
+    def test_cache_write_stores_the_url(self):
+        store = AtlasStore.__new__(AtlasStore)
+        store.guides = MagicMock()
+        store.cache_contributing_guide(
+            "torvalds/linux",
+            "https://docs.kernel.org/process/submitting-patches.html",
+        )
+        stored = store.guides.update_one.call_args.args[1]["$set"]
+        self.assertEqual(
+            stored["url"],
+            "https://docs.kernel.org/process/submitting-patches.html",
+        )
+        self.assertEqual(store.guides.update_one.call_args.kwargs["upsert"], True)
+
+
+class MatchRecordTests(unittest.TestCase):
+    def test_record_match_keeps_repo_names_only(self):
+        store = AtlasStore.__new__(AtlasStore)
+        store.matches = MagicMock()
+        inserted = MagicMock()
+        inserted.inserted_id = "abc123"
+        store.matches.insert_one.return_value = inserted
+        match_id = store.record_match(["django/django", "django/django", " ", "pallets/flask"])
+        self.assertEqual(match_id, "abc123")
+        document = store.matches.insert_one.call_args.args[0]
+        self.assertEqual(document["repos"], ["django/django", "pallets/flask"])
+        self.assertEqual(document["recommendation_count"], 2)
+        self.assertNotIn("profile", document)
+        self.assertNotIn("rankings", document)
+        self.assertNotIn("why", document)
+        self.assertFalse(hasattr(AtlasStore, "save_match"))
+
+
 class IndexSetupTests(unittest.TestCase):
     def test_issue_cache_ttl_index_is_one_hour(self):
         with patch("app.store.MongoClient") as client_cls:

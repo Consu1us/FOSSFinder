@@ -103,3 +103,76 @@ class GitHubTokenTests(unittest.TestCase):
         self.assertEqual(issues[0]["body"], "Please fix the docs.")
         self.assertEqual(issues[0]["repo_full_name"], "owner/name")
         self.assertEqual(issues[0]["labels"], ["good first issue"])
+
+
+class IssueAvailabilityTests(unittest.TestCase):
+    def test_disabled_issues_stop_after_one_request(self):
+        calls = {"count": 0}
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            calls["count"] += 1
+            return httpx.Response(410, json={"message": "Issues are disabled for this repo"})
+
+        github = _github("", handler)
+        try:
+            issues = github.starter_issues("torvalds/linux", "senior")
+        finally:
+            github.close()
+        self.assertEqual(issues, [])
+        self.assertEqual(calls["count"], 1)
+
+    def test_bug_label_ignores_pull_requests(self):
+        def handler(request: httpx.Request) -> httpx.Response:
+            self.assertEqual(request.url.params.get("labels"), "bug")
+            return httpx.Response(
+                200,
+                json=[{"number": 1, "pull_request": {"url": "https://example.test/pull/1"}}],
+            )
+
+        github = _github("", handler)
+        try:
+            self.assertFalse(github.has_open_bug_issues("owner/name"))
+        finally:
+            github.close()
+
+    def test_contributing_guide_prefers_the_community_profile(self):
+        def handler(request: httpx.Request) -> httpx.Response:
+            self.assertTrue(str(request.url).endswith("/community/profile"))
+            return httpx.Response(
+                200,
+                json={
+                    "files": {
+                        "contributing": {
+                            "html_url": "https://github.com/a/b/blob/main/CONTRIBUTING.md"
+                        }
+                    }
+                },
+            )
+
+        github = _github("", handler)
+        try:
+            url = github.contributing_guide_url("a/b")
+        finally:
+            github.close()
+        self.assertEqual(url, "https://github.com/a/b/blob/main/CONTRIBUTING.md")
+
+    def test_contributing_guide_checks_known_paths(self):
+        def handler(request: httpx.Request) -> httpx.Response:
+            url = str(request.url)
+            if url.endswith("/community/profile"):
+                return httpx.Response(200, json={"files": {"contributing": None}})
+            if url.endswith("/contents/CONTRIBUTING.md"):
+                return httpx.Response(404, json={"message": "Not Found"})
+            if url.endswith("/contents/.github/CONTRIBUTING.md"):
+                return httpx.Response(
+                    200,
+                    json={"html_url": "https://github.com/a/b/blob/main/.github/CONTRIBUTING.md"},
+                )
+            return httpx.Response(404, json={"message": "Not Found"})
+
+        github = _github("", handler)
+        try:
+            url = github.contributing_guide_url("a/b")
+        finally:
+            github.close()
+        self.assertEqual(url, "https://github.com/a/b/blob/main/.github/CONTRIBUTING.md")
