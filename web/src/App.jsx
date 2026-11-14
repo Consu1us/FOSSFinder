@@ -133,9 +133,9 @@ function Results({ payload }) {
         <h2>Skills from the resume</h2>
         <p>{profile.summary}</p>
         <p className="meta">Seniority: {profile.seniority || "unspecified"}</p>
-        <SkillGroup title="Listed in the skills section" items={listed} />
-        <SkillGroup title="Shown in the rest of the resume" items={inferred} />
-        <SkillGroup title="Languages and frameworks" items={chips([...(profile.languages || []), ...(profile.frameworks || [])])} />
+        <SkillGroup title="Explicitly listed skills:" items={listed} />
+        <SkillGroup title="From the rest of the resume:" items={inferred} />
+        <SkillGroup title="Languages and frameworks:" items={chips([...(profile.languages || []), ...(profile.frameworks || [])])} />
       </section>
       {payload.issues_note ? <p className="note">{payload.issues_note}</p> : null}
       {models ? <p className="model-used">{models}</p> : null}
