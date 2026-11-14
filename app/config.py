@@ -14,6 +14,7 @@ class Settings:
     mongodb_db: str
     gemini_api_key: str
     gemini_model: str
+    gemini_fallback_model: str
     github_token: str
 
     @property
@@ -33,5 +34,6 @@ def get_settings() -> Settings:
         gemini_api_key=os.getenv("GEMINI_API_KEY", "").strip(),
         gemini_model=os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
         or "gemini-3.8-flash",
+        gemini_fallback_model=os.getenv("GEMINI_FALLBACK_MODEL", "").strip(),
         github_token=os.getenv("GITHUB_TOKEN", "").strip(),
     )
