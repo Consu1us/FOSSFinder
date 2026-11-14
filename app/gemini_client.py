@@ -228,6 +228,7 @@ class GeminiMatcher:
             "and contribution_workflow. Do not invent maintainers, issue counts, release history, or a "
             "contribution process the catalog does not state. "
             "score: confidence from 0 to 100 that a first contribution is realistic. "
+            "don't be afraid to give the user low scores if the overlap is weak"
             "Return at most 5 rankings, highest score first. Skip a repository when the overlap is weak.\n\n"
             f"Profile:\n{json.dumps(profile)}\n\nRepositories:\n{json.dumps(compact)}"
         )
