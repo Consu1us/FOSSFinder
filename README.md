@@ -11,7 +11,6 @@ Upload a PDF resume. Gemini reads the skills listed on it and the skills shown i
 5. Copy the environment file and fill in the empty values.
 
 PowerShell:
-
 ```powershell
 copy .env.example .env
 ```
