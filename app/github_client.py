@@ -75,7 +75,7 @@ class GitHubSearch:
             if label:
                 params["labels"] = label
             response = self._client.get(f"{GITHUB_API}/repos/{full_name}/issues", params=params)
-            if response.status_code == 404:
+            if response.status_code in {404, 410}:
                 return collected
             self._raise_if_rate_limited(response)
             if response.status_code >= 400:
@@ -112,3 +112,44 @@ class GitHubSearch:
             if collected and label:
                 break
         return collected
+
+    def has_open_bug_issues(self, full_name: str) -> bool:
+        response = self._client.get(
+            f"{GITHUB_API}/repos/{full_name}/issues",
+            params={"state": "open", "labels": "bug", "per_page": 5},
+        )
+        if response.status_code in {404, 410}:
+            return False
+        self._raise_if_rate_limited(response)
+        if response.status_code >= 400:
+            return False
+        payload = response.json()
+        if not isinstance(payload, list):
+            return False
+        return any(not item.get("pull_request") for item in payload if isinstance(item, dict))
+
+    def contributing_guide_url(self, full_name: str) -> str:
+        profile = self._client.get(f"{GITHUB_API}/repos/{full_name}/community/profile")
+        if profile.status_code not in {404, 410}:
+            self._raise_if_rate_limited(profile)
+        if profile.status_code == 200:
+            body = profile.json()
+            files = body.get("files") if isinstance(body, dict) else None
+            contributing = files.get("contributing") if isinstance(files, dict) else None
+            if isinstance(contributing, dict):
+                url = str(contributing.get("html_url") or "").strip()
+                if url:
+                    return url
+        for path in ("CONTRIBUTING.md", ".github/CONTRIBUTING.md", "docs/CONTRIBUTING.md"):
+            response = self._client.get(f"{GITHUB_API}/repos/{full_name}/contents/{path}")
+            if response.status_code in {404, 410}:
+                continue
+            self._raise_if_rate_limited(response)
+            if response.status_code >= 400:
+                continue
+            body = response.json()
+            if isinstance(body, dict):
+                url = str(body.get("html_url") or "").strip()
+                if url:
+                    return url
+        return ""

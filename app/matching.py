@@ -54,13 +54,13 @@ def fallback_rank_repos(profile: dict, repos: list[dict], limit: int = 5) -> lis
         notes = repo.get("contribution_notes") or "Read the contributing guide before opening a pull request."
         if overlap:
             why = (
-                "Your background overlaps this project on "
+                "I think you'd be a good fit here because your background overlaps this project on "
                 + ", ".join(overlap[:4])
                 + ". "
                 + notes
             )
         else:
-            why = notes
+            why = "I think this is a possible match. " + notes
         score = int(repo.get("local_score") or 0)
         ranked.append(
             {

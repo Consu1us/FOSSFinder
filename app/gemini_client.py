@@ -69,8 +69,9 @@ RANK_SCHEMA = {
                     "full_name": {"type": "string"},
                     "score": {"type": "integer"},
                     "why": {"type": "string"},
+                    "project_description": {"type": "string"},
                 },
-                "required": ["full_name", "score", "why"],
+                "required": ["full_name", "score", "why", "project_description"],
             },
         }
     },
@@ -168,6 +169,8 @@ class GeminiMatcher:
         self._sleep = sleep or time.sleep
         self._clock = clock or time.monotonic
         self._rng = rng or random.Random()
+        self.profile_model = ""
+        self.rank_model = ""
 
     def profile_from_resume(self, resume_text: str) -> dict:
         contents = (
@@ -182,7 +185,8 @@ class GeminiMatcher:
             f"{resume_text}"
         )
         try:
-            response = self._generate(contents, PROFILE_SCHEMA)
+            response, model_name = self._generate(contents, PROFILE_SCHEMA)
+            self.profile_model = model_name
             profile = _as_dict(response)
         except GeminiProfileError:
             raise
@@ -209,6 +213,7 @@ class GeminiMatcher:
                 "domains": repo.get("domains") or [],
                 "difficulty": repo.get("difficulty"),
                 "contribution_notes": repo.get("contribution_notes") or "",
+                "contribution_workflow": repo.get("contribution_workflow") or "github-pr",
             }
             for repo in repos[:12]
         ]
@@ -216,13 +221,20 @@ class GeminiMatcher:
             "Choose the reviewed open-source repositories this person could contribute to. "
             "Use only repositories in the input. Copy full_name exactly. "
             "Prefer overlap with skills_listed and skills_inferred, then a difficulty that fits seniority. "
-            "why: two sentences naming the specific skills that transfer and the kind of change they could make. "
+            "why: write in the first person, as yourself speaking directly to this person. "
+            "Two or three sentences. Name the skills that transfer and the kind of change they could make. "
+            "Shape it like: I think you'd be a good fit here because your work with ... "
+            "project_description: 2 to 4 sentences on what the project is and what contributing looks like. "
+            "Use only the catalog description, languages, skills, domains, difficulty, contribution_notes, "
+            "and contribution_workflow. Do not invent maintainers, issue counts, release history, or a "
+            "contribution process the catalog does not state. "
             "score: confidence from 0 to 100 that a first contribution is realistic. "
             "Return at most 5 rankings, highest score first. Skip a repository when the overlap is weak.\n\n"
             f"Profile:\n{json.dumps(profile)}\n\nRepositories:\n{json.dumps(compact)}"
         )
         try:
-            response = self._generate(contents, RANK_SCHEMA)
+            response, model_name = self._generate(contents, RANK_SCHEMA)
+            self.rank_model = model_name
         except Exception as exc:
             logger.warning(
                 "Gemini ranking failed after retries (%s). Local skill-overlap ranking will be used.",
@@ -244,6 +256,7 @@ class GeminiMatcher:
                     "full_name": full_name,
                     "score": max(0, min(score, 100)),
                     "why": str(item.get("why") or "").strip(),
+                    "project_description": str(item.get("project_description") or "").strip(),
                 }
             )
         cleaned.sort(key=lambda item: item["score"], reverse=True)
@@ -264,9 +277,12 @@ class GeminiMatcher:
             return 0.0
         return min(self._timeout_s, OVERALL_BUDGET_S - self._primary_budget())
 
-    def _generate(self, contents: str, schema: dict):
+    def _generate(self, contents: str, schema: dict) -> tuple[object, str]:
         try:
-            return self._call_model(self._model, contents, schema, self._primary_budget())
+            return (
+                self._call_model(self._model, contents, schema, self._primary_budget()),
+                self._model,
+            )
         except Exception as exc:
             if not is_retryable(exc) or not self._fallback_model:
                 raise
@@ -275,8 +291,11 @@ class GeminiMatcher:
                 self._model,
                 self._fallback_model,
             )
-            return self._call_model(
-                self._fallback_model, contents, schema, self._fallback_budget()
+            return (
+                self._call_model(
+                    self._fallback_model, contents, schema, self._fallback_budget()
+                ),
+                self._fallback_model,
             )
 
     def _call_model(self, model: str, contents: str, schema: dict, budget_s: float):

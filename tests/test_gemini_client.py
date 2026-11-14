@@ -145,6 +145,7 @@ class ProfileRetryTests(unittest.TestCase):
         matcher, client, delays = _matcher(script, fallback="gemini-2.5-flash")
         profile = matcher.profile_from_resume("resume text")
         self.assertEqual(profile["languages"], ["Python"])
+        self.assertEqual(matcher.profile_model, "gemini-2.5-flash")
         models = [call["model"] for call in client.models.calls]
         self.assertEqual(models[:MAX_ATTEMPTS], ["gemini-3.8-flash"] * MAX_ATTEMPTS)
         self.assertEqual(models[-1], "gemini-2.5-flash")
@@ -193,6 +194,7 @@ class RankRetryTests(unittest.TestCase):
         matcher, client, delays = _matcher([_unavailable() for _ in range(MAX_ATTEMPTS)])
         with self.assertRaises(ServerError):
             matcher.rank_repos({"languages": ["Python"]}, [{"full_name": "django/django"}])
+        self.assertEqual(matcher.rank_model, "")
         self.assertEqual(len(client.models.calls), MAX_ATTEMPTS)
         self.assertEqual(len(delays), MAX_ATTEMPTS - 1)
 
@@ -210,6 +212,7 @@ class RankRetryTests(unittest.TestCase):
         matcher, client, _delays = _matcher(script, fallback="gemini-2.5-flash")
         ranked = matcher.rank_repos({"languages": ["Python"]}, [{"full_name": "django/django"}])
         self.assertEqual(ranked[0]["full_name"], "django/django")
+        self.assertEqual(matcher.rank_model, "gemini-2.5-flash")
         self.assertEqual(client.models.calls[-1]["model"], "gemini-2.5-flash")
 
 

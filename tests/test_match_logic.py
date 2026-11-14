@@ -8,7 +8,7 @@ from app.matching import fallback_rank_repos, profile_terms, shortlist_repos
 class CatalogTests(unittest.TestCase):
     def test_catalog_entries_are_complete(self):
         repos = load_catalog()
-        self.assertGreaterEqual(len(repos), 40)
+        self.assertGreaterEqual(len(repos), 78)
         names = [repo["full_name"] for repo in repos]
         self.assertEqual(len(names), len(set(names)))
         for repo in repos:
@@ -16,6 +16,26 @@ class CatalogTests(unittest.TestCase):
                 self.assertTrue(repo.get(key), repo["full_name"])
             self.assertTrue(repo["html_url"].endswith(repo["full_name"]))
             self.assertIn(repo["difficulty"], {"beginner", "intermediate", "advanced"})
+            self.assertIn(
+                repo["contribution_workflow"],
+                {"github-pr", "mailing-list", "external"},
+            )
+
+    def test_linux_and_openfoam_do_not_take_github_pull_requests(self):
+        repos = {repo["full_name"]: repo for repo in load_catalog()}
+        linux = repos["torvalds/linux"]
+        foam = repos["OpenFOAM/OpenFOAM-dev"]
+        self.assertEqual(linux["difficulty"], "advanced")
+        self.assertEqual(linux["contribution_workflow"], "mailing-list")
+        self.assertEqual(
+            linux["contributing_url"],
+            "https://docs.kernel.org/process/submitting-patches.html",
+        )
+        self.assertIn("mailing", linux["contribution_notes"].lower())
+        self.assertEqual(foam["difficulty"], "advanced")
+        self.assertEqual(foam["contribution_workflow"], "external")
+        self.assertEqual(foam["contributing_url"], "https://openfoam.org/dev/how-to-contribute/")
+        self.assertIn("does not take github pull requests", foam["contribution_notes"].lower())
 
 
 class MatchingTests(unittest.TestCase):

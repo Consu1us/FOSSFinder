@@ -88,15 +88,25 @@ def github_session(token: str):
         client.close()
 
 
-def _public_repo(repo: dict, ranking: dict, issues: list[dict]) -> dict:
+def _public_repo(
+    repo: dict,
+    ranking: dict,
+    issues: list[dict],
+    contributing_url: str,
+    show_contributing: bool,
+) -> dict:
+    description = (ranking.get("project_description") or "").strip() or repo.get("description") or ""
     return {
         "score": ranking["score"],
         "why": ranking["why"],
         "full_name": repo["full_name"],
         "url": repo.get("html_url") or f"https://github.com/{repo['full_name']}",
-        "description": repo.get("description") or "",
+        "description": description,
         "languages": repo.get("languages") or [],
         "difficulty": repo.get("difficulty") or "intermediate",
+        "contribution_workflow": repo.get("contribution_workflow") or "github-pr",
+        "contributing_url": contributing_url,
+        "show_contributing": show_contributing,
         "issues": [
             {
                 "title": issue["title"],
@@ -136,6 +146,21 @@ def _write_cached_issues(
         store.cache_starter_issues(full_name, seniority, issues)
     except Exception:
         logger.warning("Starter-issue cache write failed for %s", full_name, exc_info=True)
+
+
+def _read_cached_guide(store: AtlasStore, full_name: str) -> str | None:
+    try:
+        return store.cached_contributing_guide(full_name)
+    except Exception:
+        logger.warning("Contributing-guide cache read failed for %s", full_name, exc_info=True)
+        return None
+
+
+def _write_cached_guide(store: AtlasStore, full_name: str, url: str) -> None:
+    try:
+        store.cache_contributing_guide(full_name, url)
+    except Exception:
+        logger.warning("Contributing-guide cache write failed for %s", full_name, exc_info=True)
 
 
 @app.get("/")
@@ -260,8 +285,13 @@ def match_resume(resume: UploadFile = File(...)):
 
     issues_note = None
     issues_by_repo: dict[str, list[dict]] = {}
+    guides: dict[str, str] = {}
+    open_issue_repos: set[str] = set()
     seniority = str(profile.get("seniority") or "unspecified").strip().lower() or "unspecified"
-    misses: list[str] = []
+    issue_misses: list[str] = []
+    guide_fetches: list[str] = []
+    bug_checks: list[str] = []
+    ordered: list[str] = []
     seen: set[str] = set()
     for item in rankings:
         repo = known[item["full_name"].lower()]
@@ -269,19 +299,53 @@ def match_resume(resume: UploadFile = File(...)):
         if name in seen:
             continue
         seen.add(name)
+        ordered.append(name)
         cached = _read_cached_issues(store, name, seniority)
         if cached is not None:
             issues_by_repo[name] = cached
-            continue
-        misses.append(name)
+        else:
+            issue_misses.append(name)
 
-    if misses:
+    for name in ordered:
+        repo = known[name.lower()]
+        override = str(repo.get("contributing_url") or "").strip()
+        if override:
+            guides[name] = override
+            continue
+        cached_guide = _read_cached_guide(store, name)
+        if cached_guide is not None:
+            guides[name] = cached_guide
+        if name in issue_misses:
+            continue
+        if issues_by_repo.get(name):
+            open_issue_repos.add(name)
+            if name not in guides:
+                guide_fetches.append(name)
+        else:
+            bug_checks.append(name)
+
+    if issue_misses or guide_fetches or bug_checks:
         try:
             with github_session(settings.github_token) as github:
-                for name in misses:
+                for name in issue_misses:
                     issues = github.starter_issues(name, seniority)
                     issues_by_repo[name] = issues
                     _write_cached_issues(store, name, seniority, issues)
+                    if issues:
+                        open_issue_repos.add(name)
+                        if name not in guides:
+                            guide_fetches.append(name)
+                    elif name not in guides:
+                        bug_checks.append(name)
+                for name in bug_checks:
+                    if github.has_open_bug_issues(name):
+                        open_issue_repos.add(name)
+                        if name not in guides:
+                            guide_fetches.append(name)
+                for name in guide_fetches:
+                    url = github.contributing_guide_url(name)
+                    guides[name] = url
+                    _write_cached_guide(store, name, url)
         except RuntimeError as exc:
             issues_note = str(exc)
         except Exception as exc:
@@ -291,22 +355,35 @@ def match_resume(resume: UploadFile = File(...)):
     try:
         if flat_issues:
             store.upsert_issues(flat_issues)
-        match_id = store.save_match(profile, rankings)
+        match_id = store.record_match([item["full_name"] for item in rankings])
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"MongoDB Atlas write failed: {exc}") from exc
 
-    recommendations = [
-        _public_repo(
-            known[item["full_name"].lower()],
-            item,
-            issues_by_repo.get(known[item["full_name"].lower()]["full_name"], []),
+    recommendations = []
+    for item in rankings:
+        if item["full_name"].lower() not in known:
+            continue
+        repo = known[item["full_name"].lower()]
+        name = repo["full_name"]
+        guide = guides.get(name, "")
+        show_contributing = name in guides and (bool(guide) or name in open_issue_repos)
+        recommendations.append(
+            _public_repo(
+                repo,
+                item,
+                issues_by_repo.get(name, []),
+                guide,
+                show_contributing,
+            )
         )
-        for item in rankings
-        if item["full_name"].lower() in known
-    ]
     return {
         "match_id": match_id,
         "profile": profile,
+        "model_used": {
+            "profile": gemini.profile_model,
+            "ranking": None if used_fallback else gemini.rank_model,
+            "ranking_source": "local-keywords" if used_fallback else "gemini",
+        },
         "used_fallback": used_fallback,
         "issues_note": issues_note,
         "stored": {"repos": len(catalog), "issues": len(flat_issues)},

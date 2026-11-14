@@ -96,6 +96,7 @@ export default function App() {
             onChange={(event) => takeFile(event.target.files?.[0])}
           />
         </label>
+        <p className="privacy">Resumes and personal information are not stored.</p>
         <button type="submit" disabled={busy}>
           {busy ? "Matching…" : "Find repositories"}
         </button>
@@ -119,6 +120,7 @@ function Results({ payload }) {
   const profile = payload.profile || {};
   const listed = chips(profile.skills_listed);
   const inferred = chips(profile.skills_inferred);
+  const models = modelLine(payload.model_used);
   return (
     <>
       <section className="profile">
@@ -130,6 +132,7 @@ function Results({ payload }) {
         <SkillGroup title="Languages and frameworks" items={chips([...(profile.languages || []), ...(profile.frameworks || [])])} />
       </section>
       {payload.issues_note ? <p className="note">{payload.issues_note}</p> : null}
+      {models ? <p className="model-used">{models}</p> : null}
       <section className="results">
         {(payload.recommendations || []).map((repo) => (
           <article key={repo.full_name}>
@@ -146,9 +149,11 @@ function Results({ payload }) {
               <p>{repo.description}</p>
               <p className="why">{repo.why}</p>
               <p className="meta">
-                {(repo.languages || []).join(", ") || "Mixed"} · {repo.difficulty}
+                {(repo.languages || []).join(", ") || "Mixed"} · {repo.difficulty} ·{" "}
+                {workflowLabel(repo.contribution_workflow)}
               </p>
               <IssueList issues={repo.issues} />
+              {repo.show_contributing ? <ContributingGuide url={repo.contributing_url} /> : null}
             </div>
           </article>
         ))}
@@ -169,6 +174,40 @@ function SkillGroup({ title, items }) {
           </span>
         ))}
       </div>
+    </div>
+  );
+}
+
+function modelLine(modelUsed) {
+  if (!modelUsed) return "";
+  const profile = modelUsed.profile || "the Gemini model";
+  if (modelUsed.ranking_source === "local-keywords") {
+    return `Profile read with ${profile}. Ranked from skill overlap because Gemini ranking was unavailable.`;
+  }
+  const ranking = modelUsed.ranking || profile;
+  if (ranking !== profile) {
+    return `Profile read with ${profile}. Ranked with ${ranking}.`;
+  }
+  return `Read and ranked with ${ranking}.`;
+}
+
+function workflowLabel(workflow) {
+  if (workflow === "mailing-list") return "Mailing list, not GitHub pull requests";
+  if (workflow === "external") return "Contributions happen outside GitHub";
+  return "GitHub pull requests";
+}
+
+function ContributingGuide({ url }) {
+  return (
+    <div className="guide">
+      <h3>Contributing guide</h3>
+      {url ? (
+        <a href={url} target="_blank" rel="noreferrer">
+          Open the contributing guide
+        </a>
+      ) : (
+        <p className="meta">No contributing guide was found for this repository.</p>
+      )}
     </div>
   );
 }
