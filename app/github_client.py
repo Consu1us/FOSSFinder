@@ -17,6 +17,19 @@ def _headers(token: str) -> dict[str, str]:
     return headers
 
 
+def rate_limit_message(has_token: bool) -> str:
+    if not has_token:
+        return (
+            "GitHub rate limit reached because GITHUB_TOKEN is not set. "
+            "Unauthenticated clients get about 60 REST requests per hour "
+            "(about 10 requests per minute on the search API), and one match "
+            "can make up to 15 starter-issue calls. "
+            "Create a token with public repository read access at "
+            "https://github.com/settings/tokens, add it to .env as GITHUB_TOKEN, and try again."
+        )
+    return "GitHub rate limit reached. Wait a minute and try again."
+
+
 def _excerpt(text: str | None, limit: int = 500) -> str:
     if not text:
         return ""
@@ -26,6 +39,7 @@ def _excerpt(text: str | None, limit: int = 500) -> str:
 
 class GitHubSearch:
     def __init__(self, token: str):
+        self._token = token
         self._client = httpx.Client(
             headers=_headers(token),
             timeout=20.0,
@@ -35,19 +49,14 @@ class GitHubSearch:
     def close(self) -> None:
         self._client.close()
 
-    def _search(self, path: str, query: str, per_page: int) -> list[dict]:
-        response = self._client.get(
-            f"{GITHUB_API}{path}",
-            params={"q": query, "sort": "updated", "order": "desc", "per_page": per_page},
-        )
-        if response.status_code == 403:
+    def _raise_if_rate_limited(self, response: httpx.Response) -> None:
+        if response.status_code in {403, 429}:
+            raise RuntimeError(rate_limit_message(bool(self._token)))
+        if response.status_code == 401:
             raise RuntimeError(
-                "GitHub rate limit reached. Add a GITHUB_TOKEN to .env and try again."
+                "GitHub rejected GITHUB_TOKEN. Check that the token is valid and "
+                "can read public repositories, then update .env."
             )
-        if response.status_code == 422:
-            return []
-        response.raise_for_status()
-        return response.json().get("items", [])
 
     def starter_issues(self, full_name: str, seniority: str, limit: int = 2) -> list[dict]:
         level = (seniority or "unspecified").lower()
@@ -68,10 +77,7 @@ class GitHubSearch:
             response = self._client.get(f"{GITHUB_API}/repos/{full_name}/issues", params=params)
             if response.status_code == 404:
                 return collected
-            if response.status_code == 403:
-                raise RuntimeError(
-                    "GitHub rate limit reached. Add a GITHUB_TOKEN to .env and try again."
-                )
+            self._raise_if_rate_limited(response)
             if response.status_code >= 400:
                 continue
             payload = response.json()
@@ -106,63 +112,3 @@ class GitHubSearch:
             if collected and label:
                 break
         return collected
-
-    def search_repos(self, query: str) -> list[dict]:
-        fetched_at = datetime.now(timezone.utc).isoformat()
-        repos = []
-        for item in self._search("/search/repositories", query, 8):
-            repos.append(
-                {
-                    "full_name": item.get("full_name"),
-                    "html_url": item.get("html_url"),
-                    "description": item.get("description") or "",
-                    "language": item.get("language"),
-                    "topics": item.get("topics") or [],
-                    "stars": item.get("stargazers_count") or 0,
-                    "open_issues": item.get("open_issues_count") or 0,
-                    "updated_at": item.get("updated_at"),
-                    "fetched_at": fetched_at,
-                }
-            )
-        return [repo for repo in repos if repo["full_name"]]
-
-    def search_issues(self, query: str, repos_by_name: dict[str, dict]) -> list[dict]:
-        fetched_at = datetime.now(timezone.utc).isoformat()
-        issues = []
-        for item in self._search("/search/issues", query, 8):
-            if item.get("pull_request"):
-                continue
-            repo_url = item.get("repository_url") or ""
-            full_name = repo_url.removeprefix(f"{GITHUB_API}/repos/")
-            if not full_name or "/" not in full_name:
-                continue
-            repo = repos_by_name.get(full_name) or {
-                "full_name": full_name,
-                "html_url": f"https://github.com/{full_name}",
-                "description": "",
-                "language": None,
-                "topics": [],
-                "stars": None,
-                "open_issues": None,
-                "updated_at": None,
-                "fetched_at": fetched_at,
-            }
-            issues.append(
-                {
-                    "repo_full_name": full_name,
-                    "number": item.get("number"),
-                    "title": item.get("title") or "",
-                    "body": _excerpt(item.get("body")),
-                    "labels": [
-                        label.get("name")
-                        for label in item.get("labels") or []
-                        if label.get("name")
-                    ],
-                    "html_url": item.get("html_url"),
-                    "state": item.get("state") or "open",
-                    "updated_at": item.get("updated_at"),
-                    "fetched_at": fetched_at,
-                    "repo": repo,
-                }
-            )
-        return [issue for issue in issues if issue["html_url"]]
