@@ -1,9 +1,10 @@
-from contextlib import contextmanager
+import logging
+from contextlib import asynccontextmanager, contextmanager
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.catalog import load_catalog
@@ -12,13 +13,60 @@ from app.gemini_client import GeminiMatcher
 from app.github_client import GitHubSearch
 from app.matching import fallback_rank_repos, shortlist_repos
 from app.pdf_text import extract_resume_text
-from app.store import get_store
+from app.store import AtlasStore, get_store
 
 MAX_PDF_BYTES = 8 * 1024 * 1024
-STATIC = ROOT / "app" / "static"
 DIST = ROOT / "web" / "dist"
+UI_HINT = (
+    "FOSSFinder API is running.\n"
+    "\n"
+    "The React app is not built yet. From the web directory, run one of these:\n"
+    "  npm run dev    start the Vite dev server at http://127.0.0.1:5173\n"
+    "  npm run build  build the app, then reload this page\n"
+)
 
-app = FastAPI(title="FOSSFinder", version="0.2.0")
+logger = logging.getLogger("fossfinder")
+startup_status: dict[str, str | int] = {"catalog_seed": "skipped", "catalog_seeded": 0}
+
+
+def _configure_logging() -> None:
+    if logger.handlers:
+        return
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(levelname)s %(name)s: %(message)s"))
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    _configure_logging()
+    settings = get_settings()
+    if not settings.mongodb_uri:
+        startup_status["catalog_seed"] = "skipped"
+        startup_status["catalog_seeded"] = 0
+        logger.info("MONGODB_URI is not set; skipping catalog seed.")
+    else:
+        try:
+            store = get_store(settings.mongodb_uri, settings.mongodb_db)
+            seeded = store.ensure_catalog(load_catalog())
+        except Exception as exc:
+            startup_status["catalog_seed"] = f"error: {exc.__class__.__name__}"
+            startup_status["catalog_seeded"] = 0
+            logger.exception(
+                "MongoDB Atlas was unreachable during catalog seed. The API will stay up."
+            )
+        else:
+            startup_status["catalog_seed"] = "ok"
+            startup_status["catalog_seeded"] = seeded
+            logger.info("Seeded %s reviewed repositories into MongoDB.", seeded)
+    app.state.catalog_seed = startup_status["catalog_seed"]
+    app.state.catalog_seeded = startup_status["catalog_seeded"]
+    yield
+
+
+app = FastAPI(title="FOSSFinder", version="0.2.0", lifespan=lifespan)
 _settings = get_settings()
 app.add_middleware(
     CORSMiddleware,
@@ -27,7 +75,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=_settings.allowed_hosts)
-app.mount("/static", StaticFiles(directory=STATIC), name="static")
 if (DIST / "assets").is_dir():
     app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
 
@@ -61,12 +108,42 @@ def _public_repo(repo: dict, ranking: dict, issues: list[dict]) -> dict:
     }
 
 
+def _startup_seed_error() -> HTTPException | None:
+    seed = str(startup_status["catalog_seed"])
+    if not seed.startswith("error:"):
+        return None
+    return HTTPException(
+        status_code=503,
+        detail=(
+            "MongoDB Atlas was unreachable when the reviewed catalog was seeded at startup "
+            f"({seed}). The API is up. Check the cluster, then restart to load data/catalog.json."
+        ),
+    )
+
+
+def _read_cached_issues(store: AtlasStore, full_name: str, seniority: str) -> list[dict] | None:
+    try:
+        return store.cached_starter_issues(full_name, seniority)
+    except Exception:
+        logger.warning("Starter-issue cache read failed for %s", full_name, exc_info=True)
+        return None
+
+
+def _write_cached_issues(
+    store: AtlasStore, full_name: str, seniority: str, issues: list[dict]
+) -> None:
+    try:
+        store.cache_starter_issues(full_name, seniority, issues)
+    except Exception:
+        logger.warning("Starter-issue cache write failed for %s", full_name, exc_info=True)
+
+
 @app.get("/")
 def index():
     built = DIST / "index.html"
     if built.is_file():
         return FileResponse(built)
-    return FileResponse(STATIC / "index.html")
+    return PlainTextResponse(UI_HINT)
 
 
 @app.get("/api/health")
@@ -75,7 +152,7 @@ def health():
     missing = settings.ready
     atlas = "skipped"
     catalog = 0
-    if not missing:
+    if settings.mongodb_uri:
         try:
             store = get_store(settings.mongodb_uri, settings.mongodb_db)
             store.ping()
@@ -84,9 +161,11 @@ def health():
         except Exception as exc:
             atlas = f"error: {exc.__class__.__name__}"
     return {
-        "ok": not missing and atlas == "ok",
+        "ok": not missing and atlas == "ok" and startup_status["catalog_seed"] == "ok",
         "missing": missing,
         "atlas": atlas,
+        "catalog_seed": startup_status["catalog_seed"],
+        "catalog_seeded": startup_status["catalog_seeded"],
         "catalog_repos": catalog,
         "model": settings.gemini_model,
         "github_token": bool(settings.github_token),
@@ -102,10 +181,13 @@ def repos(limit: int = 20):
     limit = max(1, min(limit, 80))
     try:
         store = get_store(settings.mongodb_uri, settings.mongodb_db)
-        store.ensure_catalog(load_catalog())
         reviewed = store.reviewed_repos()
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"MongoDB Atlas request failed: {exc}") from exc
+    if not reviewed:
+        failed = _startup_seed_error()
+        if failed is not None:
+            raise failed
     return {"counts": store.counts(), "repos": reviewed[:limit]}
 
 
@@ -142,11 +224,13 @@ def match_resume(resume: UploadFile = File(...)):
 
     try:
         store = get_store(settings.mongodb_uri, settings.mongodb_db)
-        seeded = store.ensure_catalog(load_catalog())
         catalog = store.reviewed_repos()
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"MongoDB Atlas request failed: {exc}") from exc
     if not catalog:
+        failed = _startup_seed_error()
+        if failed is not None:
+            raise failed
         raise HTTPException(status_code=404, detail="The reviewed repository list is empty.")
 
     shortlist = shortlist_repos(profile, catalog)
@@ -169,17 +253,32 @@ def match_resume(resume: UploadFile = File(...)):
 
     issues_note = None
     issues_by_repo: dict[str, list[dict]] = {}
-    try:
-        with github_session(settings.github_token) as github:
-            for item in rankings:
-                repo = known[item["full_name"].lower()]
-                issues_by_repo[repo["full_name"]] = github.starter_issues(
-                    repo["full_name"], profile.get("seniority") or "unspecified"
-                )
-    except RuntimeError as exc:
-        issues_note = str(exc)
-    except Exception as exc:
-        issues_note = f"GitHub issues could not be loaded: {exc}"
+    seniority = str(profile.get("seniority") or "unspecified").strip().lower() or "unspecified"
+    misses: list[str] = []
+    seen: set[str] = set()
+    for item in rankings:
+        repo = known[item["full_name"].lower()]
+        name = repo["full_name"]
+        if name in seen:
+            continue
+        seen.add(name)
+        cached = _read_cached_issues(store, name, seniority)
+        if cached is not None:
+            issues_by_repo[name] = cached
+            continue
+        misses.append(name)
+
+    if misses:
+        try:
+            with github_session(settings.github_token) as github:
+                for name in misses:
+                    issues = github.starter_issues(name, seniority)
+                    issues_by_repo[name] = issues
+                    _write_cached_issues(store, name, seniority, issues)
+        except RuntimeError as exc:
+            issues_note = str(exc)
+        except Exception as exc:
+            issues_note = f"GitHub issues could not be loaded: {exc}"
 
     flat_issues = [issue for issues in issues_by_repo.values() for issue in issues]
     try:
@@ -203,6 +302,6 @@ def match_resume(resume: UploadFile = File(...)):
         "profile": profile,
         "used_fallback": used_fallback,
         "issues_note": issues_note,
-        "stored": {"repos": seeded, "issues": len(flat_issues)},
+        "stored": {"repos": len(catalog), "issues": len(flat_issues)},
         "recommendations": recommendations,
     }

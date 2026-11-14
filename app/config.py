@@ -19,7 +19,7 @@ def site_access(public_url: str) -> tuple[str, list[str], list[str]]:
     scheme = parsed.scheme or "https"
     bare = host[4:] if host.startswith("www.") else host
     names = []
-    for name in (host, bare, f"www.{bare}", "localhost", "127.0.0.1"):
+    for name in (host, bare, f"www.{bare}", "localhost", "127.0.0.1", "testserver"):
         if name not in names:
             names.append(name)
     origins = [f"http://{local}" for local in ("127.0.0.1:5173", "localhost:5173", "127.0.0.1:8000", "localhost:8000")]
