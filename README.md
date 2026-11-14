@@ -11,7 +11,6 @@ Upload a PDF resume. Gemini reads the skills listed on it and the skills shown i
 5. Copy the environment file and fill in the empty values.
 
 PowerShell:
-
 ```powershell
 copy .env.example .env
 ```
@@ -24,7 +23,7 @@ cp .env.example .env
 
 `MONGODB_URI` is the Atlas connection string. `MONGODB_DB` defaults to `fossfinder`. Reviewed repositories live in the `repos` collection. Starter-issue responses are cached in `starter_issue_cache` for about an hour, so a repeated match for the same repository and seniority does not call GitHub again. `GEMINI_API_KEY` is required. `GEMINI_MODEL` is optional and defaults to `gemini-3.5-flash`. `GEMINI_FALLBACK_MODEL` is optional. When the primary model is busy (HTTP 503 or UNAVAILABLE, 429 or RESOURCE_EXHAUSTED, 500, or a timeout), that call is retried once with a short backoff and then sent to the backup model. `GEMINI_TIMEOUT_SECONDS` is the per-request deadline (default 30 seconds). Gemini rejects anything under 10 seconds, so lower values are raised to 10. A profile call often takes 10-20 seconds. The whole Gemini call, retry included, still stops after about 60 seconds. If the resume still cannot be read, the response asks you to wait and try again. If ranking still fails, repositories are ranked from skill overlap. `GITHUB_TOKEN` is optional; set it before demoing several matches.
 
-The reviewed list is `data/catalog.json`. When `MONGODB_URI` is set, startup loads that file into Atlas with one bulk write. If Atlas is unreachable, the error is logged, the API stays up, and `GET /api/health` reports the failure. Match and repo requests read the catalog already stored in Atlas. If that seed failed and Atlas has no reviewed repositories, those routes return 503. After Atlas is reachable again, restart the API so the catalog seed runs.
+The reviewed list is `data/catalog.json`. When `MONGODB_URI` is set, startup loads that file into Atlas with one bulk write. If Atlas is unreachable, the error is logged, the API stays up, and `GET /api/health` reports the failure. Match and repo requests read the catalog already stored in Atlas. If that seed failed and Atlas has no reviewed repositories, those routes return 503. After Atlas is reachable again, restart the API so the catalog seed runs
 
 ## Run
 
