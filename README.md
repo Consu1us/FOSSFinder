@@ -25,6 +25,33 @@ cp .env.example .env
 
 The reviewed list is `data/catalog.json`. When `MONGODB_URI` is set, startup loads that file into Atlas with one bulk write. If Atlas is unreachable, the error is logged, the API stays up, and `GET /api/health` reports the failure. Match and repo requests read the catalog already stored in Atlas. If that seed failed and Atlas has no reviewed repositories, those routes return 503. After Atlas is reachable again, restart the API so the catalog seed runs.
 
+## Atlas Vector Search
+
+The match shortlist is a MongoDB Atlas Vector Search query. At startup the API embeds each catalog repository with Gemini (`GEMINI_EMBEDDING_MODEL`, default `gemini-embedding-001`, 768 dimensions) from its description, languages, skills, domains, and contribution notes. The vector is stored on the `repos` document. A content hash includes the model and dimensions, so a restart embeds a repository again only when that text changes. Embedding calls are batched. A failed batch is logged and skipped.
+
+The API creates a vector search index named `repo_embeddings` (`ATLAS_VECTOR_INDEX`) when it is missing:
+
+```json
+{
+  "fields": [
+    {
+      "type": "vector",
+      "path": "embedding",
+      "numDimensions": 768,
+      "similarity": "cosine"
+    },
+    { "type": "filter", "path": "reviewed" },
+    { "type": "filter", "path": "source" }
+  ]
+}
+```
+
+The same definition can be created in the Atlas UI: database `fossfinder`, collection `repos`, index name `repo_embeddings`, type Vector Search. Atlas Vector Search runs on M0 free clusters as well as Flex and dedicated tiers. It does not run on a standalone Community `mongod`. The index becomes queryable after Atlas finishes building it, which can take a minute or two. Until `GET /api/health` reports `vector_search.index_ready`, and whenever embeddings or the index fail, the shortlist falls back to keyword overlap. The response field `shortlist_method` is `hybrid` when vector scores are blended with that keyword score, and `keyword` on fallback.
+
+A match embeds the extracted skills and summary only in memory to query the index. That vector is not written to MongoDB. The resume, its text, and the profile are still not stored.
+
+Changing `GEMINI_EMBEDDING_MODEL` re-embeds the catalog. If you also change the 768-dimension size in code, delete the old Atlas index so it can be recreated with the new `numDimensions`.
+
 ## Run
 
 PowerShell:
@@ -94,7 +121,7 @@ The script installs the virtualenv, builds the React app, writes the nginx site,
 
 - `POST /api/match` with a multipart field named `resume` (PDF). The resume and the extracted profile are kept for that response only. MongoDB stores the time and the recommended repository names, not the resume. `model_used` names the Gemini model that read the profile and, when it differs, the model that ranked repositories. `issues_note` is set when starter issues could not be loaded, including a rate limit with no `GITHUB_TOKEN`.
 - `GET /api/repos` lists the reviewed repositories in Atlas.
-- `GET /api/health` reports missing settings, whether Atlas answered a ping, whether the startup catalog seed succeeded, how many catalog rows that seed wrote, the Gemini model, fallback model, and per-request timeout, and whether `GITHUB_TOKEN` is set.
+- `GET /api/health` reports missing settings, whether Atlas answered a ping, whether the startup catalog seed succeeded, how many catalog rows that seed wrote, vector search index readiness and how many repositories have embeddings, the Gemini model, fallback model, and per-request timeout, and whether `GITHUB_TOKEN` is set.
 
 ## FOR?
 

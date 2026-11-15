@@ -98,6 +98,10 @@ class StartupTests(unittest.TestCase):
         self.assertEqual(body["model"], "gemini-3.5-flash")
         self.assertEqual(body["fallback_model"], "")
         self.assertEqual(body["gemini_timeout_seconds"], 30)
+        self.assertEqual(body["vector_search"]["status"], "skipped")
+        self.assertFalse(body["vector_search"]["index_ready"])
+        self.assertEqual(body["vector_search"]["model"], "gemini-embedding-001")
+        self.assertEqual(body["vector_search"]["dimensions"], 768)
 
     def test_catalog_is_seeded_once_at_startup(self):
         store = _CountingStore()

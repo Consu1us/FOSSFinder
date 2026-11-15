@@ -11,7 +11,8 @@ from app.catalog import load_catalog
 from app.config import ROOT, get_settings
 from app.gemini_client import GeminiMatcher, GeminiProfileError
 from app.github_client import GitHubSearch
-from app.matching import fallback_rank_repos, shortlist_repos
+from app.matching import fallback_rank_repos
+from app.vectors import EMBEDDING_DIMENSIONS, choose_shortlist, update_vector_search
 from app.pdf_text import extract_resume_text
 from app.store import AtlasStore, get_store
 
@@ -27,6 +28,17 @@ UI_HINT = (
 
 logger = logging.getLogger("fossfinder")
 startup_status: dict[str, str | int] = {"catalog_seed": "skipped", "catalog_seeded": 0}
+vector_status: dict = {
+    "status": "skipped",
+    "index": "repo_embeddings",
+    "index_ready": False,
+    "embedded_count": 0,
+    "embedded_this_startup": 0,
+    "skipped": 0,
+    "failed": 0,
+    "model": "gemini-embedding-001",
+    "dimensions": EMBEDDING_DIMENSIONS,
+}
 
 
 def _configure_logging() -> None:
@@ -61,6 +73,7 @@ async def lifespan(app: FastAPI):
             startup_status["catalog_seed"] = "ok"
             startup_status["catalog_seeded"] = seeded
             logger.info("Seeded %s reviewed repositories into MongoDB.", seeded)
+            vector_status.update(update_vector_search(store, settings))
     app.state.catalog_seed = startup_status["catalog_seed"]
     app.state.catalog_seeded = startup_status["catalog_seeded"]
     yield
@@ -218,6 +231,7 @@ def health():
     missing = settings.ready
     atlas = "skipped"
     catalog = 0
+    store = None
     if settings.mongodb_uri:
         try:
             store = get_store(settings.mongodb_uri, settings.mongodb_db)
@@ -238,7 +252,36 @@ def health():
         "gemini_timeout_seconds": settings.gemini_timeout_seconds,
         "github_token": bool(settings.github_token),
         "public_url": settings.public_url,
+        "vector_search": _vector_health(settings, store if atlas == "ok" else None),
     }
+
+
+def _vector_health(settings, store) -> dict:
+    reported = {
+        "status": vector_status.get("status", "skipped"),
+        "index": settings.vector_index_name,
+        "index_ready": bool(vector_status.get("index_ready")),
+        "embedded_count": int(vector_status.get("embedded_count") or 0),
+        "embedded_this_startup": int(vector_status.get("embedded_this_startup") or 0),
+        "skipped": int(vector_status.get("skipped") or 0),
+        "failed": int(vector_status.get("failed") or 0),
+        "model": settings.gemini_embedding_model,
+        "dimensions": EMBEDDING_DIMENSIONS,
+    }
+    if store is None:
+        if not settings.mongodb_uri:
+            reported["status"] = "skipped"
+            reported["index_ready"] = False
+        return reported
+    try:
+        live = store.vector_index_state(settings.vector_index_name)
+        reported["status"] = live["status"]
+        reported["index_ready"] = bool(live["index_ready"])
+        reported["embedded_count"] = store.embedded_repo_count()
+    except Exception as exc:
+        reported["status"] = f"error: {exc.__class__.__name__}"
+        reported["index_ready"] = False
+    return reported
 
 
 @app.get("/api/repos")
@@ -306,7 +349,7 @@ def match_resume(resume: UploadFile = File(...)):
             raise failed
         raise HTTPException(status_code=404, detail="The reviewed repository list is empty.")
 
-    shortlist = shortlist_repos(profile, catalog)
+    shortlist, shortlist_method = choose_shortlist(profile, catalog, store, settings)
     if not shortlist:
         raise HTTPException(
             status_code=404,
@@ -425,6 +468,7 @@ def match_resume(resume: UploadFile = File(...)):
             "ranking": None if used_fallback else gemini.rank_model,
             "ranking_source": "local-keywords" if used_fallback else "gemini",
         },
+        "shortlist_method": shortlist_method,
         "used_fallback": used_fallback,
         "issues_note": issues_note,
         "stored": {"repos": len(catalog), "issues": len(flat_issues)},

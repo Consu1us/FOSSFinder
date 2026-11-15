@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from pymongo import MongoClient, UpdateOne
 from pymongo.collection import Collection
+from pymongo.operations import SearchIndexModel
 
 
 _store: "AtlasStore | None" = None
@@ -86,8 +87,119 @@ class AtlasStore:
         return len(operations)
 
     def reviewed_repos(self) -> list[dict]:
-        cursor = self.repos.find({"reviewed": True, "source": "catalog"}, {"_id": 0})
+        cursor = self.repos.find(
+            {"reviewed": True, "source": "catalog"},
+            {"_id": 0, "embedding": 0},
+        )
         return list(cursor)
+
+    def embedding_records(self) -> dict[str, dict]:
+        stored = set(
+            self.repos.distinct(
+                "full_name",
+                {"reviewed": True, "source": "catalog", "embedding": {"$type": "array"}},
+            )
+        )
+        cursor = self.repos.find(
+            {"reviewed": True, "source": "catalog", "embedding_hash": {"$exists": True}},
+            {
+                "_id": 0,
+                "full_name": 1,
+                "embedding_hash": 1,
+                "embedding_model": 1,
+                "embedding_dimensions": 1,
+            },
+        )
+        records = {}
+        for doc in cursor:
+            name = doc.get("full_name")
+            if not name:
+                continue
+            records[name] = {
+                "embedding_hash": doc.get("embedding_hash") or "",
+                "embedding_model": doc.get("embedding_model") or "",
+                "embedding_dimensions": doc.get("embedding_dimensions") or 0,
+                "has_embedding": name in stored,
+            }
+        return records
+
+    def save_embeddings(self, rows: list[dict]) -> int:
+        operations = []
+        for row in rows:
+            full_name = row.get("full_name")
+            embedding = row.get("embedding")
+            if not full_name or not isinstance(embedding, list) or not embedding:
+                continue
+            operations.append(
+                UpdateOne(
+                    {"full_name": full_name},
+                    {
+                        "$set": {
+                            "embedding": embedding,
+                            "embedding_hash": row.get("embedding_hash") or "",
+                            "embedding_model": row.get("embedding_model") or "",
+                            "embedding_dimensions": row.get("embedding_dimensions") or len(embedding),
+                        }
+                    },
+                )
+            )
+        if not operations:
+            return 0
+        self.repos.bulk_write(operations, ordered=False)
+        return len(operations)
+
+    def embedded_repo_count(self) -> int:
+        return self.repos.count_documents(
+            {"reviewed": True, "source": "catalog", "embedding": {"$type": "array"}}
+        )
+
+    def vector_index_state(self, name: str) -> dict:
+        try:
+            indexes = list(self.repos.list_search_indexes())
+        except Exception as exc:
+            return {
+                "exists": False,
+                "status": f"error: {exc.__class__.__name__}",
+                "index_ready": False,
+            }
+        for index in indexes:
+            if index.get("name") != name:
+                continue
+            status = str(index.get("status") or "unknown")
+            ready = bool(index.get("queryable")) or status.upper() in {"READY", "STEADY", "ACTIVE"}
+            return {"exists": True, "status": status, "index_ready": ready}
+        return {"exists": False, "status": "missing", "index_ready": False}
+
+    def ensure_vector_index(self, name: str, definition: dict) -> dict:
+        current = self.vector_index_state(name)
+        if current["exists"] and not str(current["status"]).startswith("error:"):
+            return current
+        self.repos.create_search_index(
+            SearchIndexModel(definition=definition, name=name, type="vectorSearch")
+        )
+        return {"exists": True, "status": "PENDING", "index_ready": False}
+
+    def vector_candidates(self, query: list[float], index_name: str, limit: int = 12) -> list[dict]:
+        pipeline = [
+            {
+                "$vectorSearch": {
+                    "index": index_name,
+                    "path": "embedding",
+                    "queryVector": query,
+                    "numCandidates": max(limit * 10, 100),
+                    "limit": limit,
+                    "filter": {"reviewed": True, "source": "catalog"},
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "full_name": 1,
+                    "score": {"$meta": "vectorSearchScore"},
+                }
+            },
+        ]
+        return list(self.repos.aggregate(pipeline))
 
     def ping(self) -> None:
         self._client.admin.command("ping")
