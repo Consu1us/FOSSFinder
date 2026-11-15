@@ -206,7 +206,7 @@ function Results({ payload }) {
   const profile = payload.profile || {};
   const listed = chips(profile.skills_listed);
   const inferred = chips(profile.skills_inferred);
-  const models = modelLine(payload.model_used);
+  const models = modelLine(payload.model_used, payload.shortlist_method);
   return (
     <>
       <section className="profile">
@@ -264,17 +264,30 @@ function SkillGroup({ title, items }) {
   );
 }
 
-function modelLine(modelUsed) {
-  if (!modelUsed) return "";
-  const profile = modelUsed.profile || "the Gemini model";
-  if (modelUsed.ranking_source === "local-keywords") {
-    return `Profile read with ${profile}. Ranked from skill overlap because Gemini ranking was unavailable.`;
+function shortlistNote(method) {
+  if (method === "hybrid") return "Shortlist: Atlas vector search blended with skill overlap.";
+  if (method === "vector") return "Shortlist: Atlas vector search.";
+  if (method === "keyword") return "Shortlist: skill overlap.";
+  return "";
+}
+
+function modelLine(modelUsed, shortlistMethod) {
+  let base = "";
+  if (modelUsed) {
+    const profile = modelUsed.profile || "the Gemini model";
+    if (modelUsed.ranking_source === "local-keywords") {
+      base = `Profile read with ${profile}. Ranked from skill overlap because Gemini ranking was unavailable.`;
+    } else {
+      const ranking = modelUsed.ranking || profile;
+      base =
+        ranking !== profile
+          ? `Profile read with ${profile}. Ranked with ${ranking}.`
+          : `Read and ranked with ${ranking}.`;
+    }
   }
-  const ranking = modelUsed.ranking || profile;
-  if (ranking !== profile) {
-    return `Profile read with ${profile}. Ranked with ${ranking}.`;
-  }
-  return `Read and ranked with ${ranking}.`;
+  const extra = shortlistNote(shortlistMethod);
+  if (base && extra) return `${base} ${extra}`;
+  return base || extra;
 }
 
 function workflowLabel(workflow) {

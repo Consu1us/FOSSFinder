@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import os
 
 from app.gemini_client import normalize_timeout_seconds
+from app.vectors import DEFAULT_EMBEDDING_MODEL, DEFAULT_VECTOR_INDEX
 
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env")
@@ -42,6 +43,8 @@ class Settings:
     gemini_model: str
     gemini_fallback_model: str
     gemini_timeout_seconds: float
+    gemini_embedding_model: str
+    vector_index_name: str
     github_token: str
     public_url: str
     allowed_hosts: list[str]
@@ -67,6 +70,10 @@ def get_settings() -> Settings:
         or "gemini-3.5-flash",
         gemini_fallback_model=os.getenv("GEMINI_FALLBACK_MODEL", "").strip(),
         gemini_timeout_seconds=normalize_timeout_seconds(os.getenv("GEMINI_TIMEOUT_SECONDS", "")),
+        gemini_embedding_model=os.getenv("GEMINI_EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL).strip()
+        or DEFAULT_EMBEDDING_MODEL,
+        vector_index_name=os.getenv("ATLAS_VECTOR_INDEX", DEFAULT_VECTOR_INDEX).strip()
+        or DEFAULT_VECTOR_INDEX,
         github_token=os.getenv("GITHUB_TOKEN", "").strip(),
         public_url=public_url,
         allowed_hosts=allowed_hosts,
